@@ -89,6 +89,45 @@ async function init() {
 
   // Expose render + config for controls (Task 5)
   window._map = { render, config, width, height, worldData, ctx };
+
+  // Controls
+  if (config.showControls) {
+    document.getElementById("controls").classList.remove("hidden");
+
+    const redSelect = document.getElementById("red-select");
+    const blueSelect = document.getElementById("blue-select");
+
+    // Populate dropdowns
+    Object.entries(PROJECTIONS).forEach(([key, { name }]) => {
+      redSelect.add(new Option(name, key));
+      blueSelect.add(new Option(name, key));
+    });
+    redSelect.value = config.red;
+    blueSelect.value = config.blue;
+
+    const onProjectionChange = () => {
+      config.red = redSelect.value;
+      config.blue = blueSelect.value;
+      render();
+    };
+    redSelect.addEventListener("change", onProjectionChange);
+    blueSelect.addEventListener("change", onProjectionChange);
+
+    // Preset buttons
+    const presetRow = document.getElementById("preset-buttons");
+    Object.entries(PRESETS).forEach(([key, preset]) => {
+      const btn = document.createElement("button");
+      btn.textContent = preset.name;
+      btn.addEventListener("click", () => {
+        config.red = preset.red;
+        config.blue = preset.blue;
+        redSelect.value = config.red;
+        blueSelect.value = config.blue;
+        render();
+      });
+      presetRow.appendChild(btn);
+    });
+  }
 }
 
 init();
