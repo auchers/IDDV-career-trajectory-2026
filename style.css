@@ -62,57 +62,58 @@ body {
 
 .projection-label {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
 }
 
 .projection-label.red {
-  color: #c00;
+  color: #c44;
 }
 
 .projection-label.blue {
-  color: #00c;
+  color: #44c;
 }
 
 .projection-field select {
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   padding: 3px 6px;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 2px;
   background: #fff;
-  color: #000;
+  color: #333;
   cursor: pointer;
 }
 
 .projection-field select:hover {
-  border-color: #000;
+  border-color: #999;
 }
 
 .preset-row {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   margin-left: 8px;
 }
 
 .preset-row button {
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
   font-size: 11px;
-  padding: 3px 10px;
-  border: 1px solid #ccc;
+  padding: 4px 12px;
+  border: none;
   border-radius: 2px;
-  background: #fff;
+  background: #f2f2f2;
   cursor: pointer;
-  font-weight: 500;
-  color: #555;
+  font-weight: 400;
+  color: #777;
   transition: all 0.15s;
+  text-transform: none;
 }
 
 .preset-row button:hover {
-  border-color: #000;
-  color: #000;
+  background: #e5e5e5;
+  color: #333;
 }
 
 /* ── Map ─────────────────────────────────────── */
