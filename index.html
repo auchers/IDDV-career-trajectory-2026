@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career Trajectory</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="controls" class="controls hidden">
+    <div class="control-row">
+      <label for="red-select">red</label>
+      <select id="red-select"></select>
+    </div>
+    <div class="control-row">
+      <label for="blue-select">blue</label>
+      <select id="blue-select"></select>
+    </div>
+    <div class="preset-row" id="preset-buttons"></div>
+  </div>
+  <canvas id="map-canvas"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-geo-projection@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-geo-polygon@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <script src="projections.js"></script>
+  <script src="map.js"></script>
+</body>
+</html>
