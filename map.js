@@ -332,6 +332,15 @@ async function init() {
 
     // Preset buttons
     const presetRow = document.getElementById("preset-buttons");
+    const presetButtons = [];
+
+    const updateActivePreset = () => {
+      presetButtons.forEach(({ btn, preset }) => {
+        const isActive = config.red === preset.red && config.blue === preset.blue;
+        btn.classList.toggle("active", isActive);
+      });
+    };
+
     Object.entries(PRESETS).forEach(([key, preset]) => {
       const btn = document.createElement("button");
       btn.textContent = preset.name;
@@ -341,9 +350,18 @@ async function init() {
         redSelect.value = config.red;
         blueSelect.value = config.blue;
         render();
+        updateActivePreset();
       });
       presetRow.appendChild(btn);
+      presetButtons.push({ btn, preset });
     });
+
+    // Also clear active state when dropdowns change manually
+    redSelect.addEventListener("change", updateActivePreset);
+    blueSelect.addEventListener("change", updateActivePreset);
+
+    // Set initial active state
+    updateActivePreset();
   }
 
   // Resize handler
