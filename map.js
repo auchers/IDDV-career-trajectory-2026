@@ -12,9 +12,6 @@ const CITIES = [
 
 function renderFlightPaths(ctx, projection) {
   ctx.save();
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2.5;
-  ctx.setLineDash([12, 6]);
 
   for (let i = 0; i < CITIES.length - 1; i++) {
     const from = [CITIES[i].lon, CITIES[i].lat];
@@ -30,19 +27,33 @@ function renderFlightPaths(ctx, projection) {
 
     if (points.length < 2) continue;
 
-    // Draw the dashed arc
-    ctx.beginPath();
-    ctx.moveTo(points[0][0], points[0][1]);
-    for (let j = 1; j < points.length; j++) {
-      ctx.lineTo(points[j][0], points[j][1]);
-    }
+    // Build the arc path as a reusable function
+    const drawArc = () => {
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (let j = 1; j < points.length; j++) {
+        ctx.lineTo(points[j][0], points[j][1]);
+      }
+    };
+
+    // Black outline behind white dashes
+    ctx.setLineDash([12, 6]);
+    drawArc();
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 5;
     ctx.stroke();
 
-    // Draw arrowhead at destination
+    // White dashed arc on top
+    drawArc();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Arrowhead at destination
     const tip = points[points.length - 1];
     const prev = points[points.length - 2];
     const angle = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
-    const arrowLen = 14;
+    const arrowLen = 12;
     const arrowWidth = Math.PI / 6;
 
     ctx.setLineDash([]);
@@ -57,9 +68,12 @@ function renderFlightPaths(ctx, projection) {
       tip[1] - arrowLen * Math.sin(angle + arrowWidth)
     );
     ctx.closePath();
-    ctx.fillStyle = "#000";
+    // Black outline arrow
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#fff";
     ctx.fill();
-    ctx.setLineDash([12, 6]);
   }
 
   ctx.restore();
@@ -73,15 +87,15 @@ function formatCoord(lat, lon) {
 
 // Manual label offsets to avoid overlap [dx, dy] from center of circle
 const LABEL_OFFSETS = [
-  [-20, 25],   // LA — below-left
-  [-20, -18],  // Berkeley — above-left
-  [20, -10],   // Tel Aviv — above-right
-  [20, 25],    // Brooklyn — below-right
-  [20, -10],   // Boston — above-right
+  [-14, 18],   // LA — below-left
+  [-14, -22],  // Berkeley — above-left
+  [14, -14],   // Tel Aviv — above-right
+  [14, 18],    // Brooklyn — below-right
+  [14, -22],   // Boston — above-right
 ];
 
 function renderMarkers(ctx, projection) {
-  const radius = 14;
+  const radius = 9;
 
   CITIES.forEach((city, i) => {
     const [x, y] = projection([city.lon, city.lat]) || [0, 0];
@@ -89,7 +103,7 @@ function renderMarkers(ctx, projection) {
 
     // White stroke ring (Warhol style)
     ctx.beginPath();
-    ctx.arc(x, y, radius + 3, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius + 2, 0, 2 * Math.PI);
     ctx.fillStyle = "#fff";
     ctx.fill();
 
@@ -101,7 +115,7 @@ function renderMarkers(ctx, projection) {
 
     // White number
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 16px 'Helvetica Neue', Arial, sans-serif";
+    ctx.font = "bold 11px 'Helvetica Neue', Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(i + 1), x, y + 1);
@@ -110,7 +124,7 @@ function renderMarkers(ctx, projection) {
     const labelX = x + dx;
     const labelY = y + dy;
 
-    ctx.font = "bold 14px 'Helvetica Neue', Arial, sans-serif";
+    ctx.font = "bold 12px 'Helvetica Neue', Arial, sans-serif";
     ctx.textAlign = dx > 0 ? "left" : "right";
     ctx.textBaseline = "top";
 
@@ -124,13 +138,13 @@ function renderMarkers(ctx, projection) {
 
     // Lat/lon coordinates
     const coordStr = formatCoord(city.lat, city.lon);
-    ctx.font = "11px 'Helvetica Neue', Arial, sans-serif";
+    ctx.font = "9px 'Helvetica Neue', Arial, sans-serif";
 
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 3;
-    ctx.strokeText(coordStr, labelX, labelY + 17);
+    ctx.strokeText(coordStr, labelX, labelY + 15);
     ctx.fillStyle = "#000";
-    ctx.fillText(coordStr, labelX, labelY + 17);
+    ctx.fillText(coordStr, labelX, labelY + 15);
   });
 }
 
