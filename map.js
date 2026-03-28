@@ -2,6 +2,138 @@
 
 const WORLD_DATA_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
+const CITIES = [
+  { name: "Los Angeles", lat: 34.05, lon: -118.24 },
+  { name: "Berkeley", lat: 37.87, lon: -122.27 },
+  { name: "Tel Aviv", lat: 32.08, lon: 34.78 },
+  { name: "Brooklyn", lat: 40.68, lon: -73.94 },
+  { name: "Boston", lat: 42.36, lon: -71.06 },
+];
+
+function renderFlightPaths(ctx, projection) {
+  ctx.save();
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([12, 6]);
+
+  for (let i = 0; i < CITIES.length - 1; i++) {
+    const from = [CITIES[i].lon, CITIES[i].lat];
+    const to = [CITIES[i + 1].lon, CITIES[i + 1].lat];
+    const interpolate = d3.geoInterpolate(from, to);
+
+    // Generate points along the great circle
+    const numPoints = 100;
+    const points = Array.from({ length: numPoints + 1 }, (_, j) => {
+      const t = j / numPoints;
+      return projection(interpolate(t));
+    }).filter((p) => p != null);
+
+    if (points.length < 2) continue;
+
+    // Draw the dashed arc
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], points[0][1]);
+    for (let j = 1; j < points.length; j++) {
+      ctx.lineTo(points[j][0], points[j][1]);
+    }
+    ctx.stroke();
+
+    // Draw arrowhead at destination
+    const tip = points[points.length - 1];
+    const prev = points[points.length - 2];
+    const angle = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
+    const arrowLen = 14;
+    const arrowWidth = Math.PI / 6;
+
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(tip[0], tip[1]);
+    ctx.lineTo(
+      tip[0] - arrowLen * Math.cos(angle - arrowWidth),
+      tip[1] - arrowLen * Math.sin(angle - arrowWidth)
+    );
+    ctx.lineTo(
+      tip[0] - arrowLen * Math.cos(angle + arrowWidth),
+      tip[1] - arrowLen * Math.sin(angle + arrowWidth)
+    );
+    ctx.closePath();
+    ctx.fillStyle = "#000";
+    ctx.fill();
+    ctx.setLineDash([12, 6]);
+  }
+
+  ctx.restore();
+}
+
+function formatCoord(lat, lon) {
+  const latDir = lat >= 0 ? "N" : "S";
+  const lonDir = lon >= 0 ? "E" : "W";
+  return `${Math.abs(lat).toFixed(2)}\u00B0${latDir}, ${Math.abs(lon).toFixed(2)}\u00B0${lonDir}`;
+}
+
+// Manual label offsets to avoid overlap [dx, dy] from center of circle
+const LABEL_OFFSETS = [
+  [-20, 25],   // LA — below-left
+  [-20, -18],  // Berkeley — above-left
+  [20, -10],   // Tel Aviv — above-right
+  [20, 25],    // Brooklyn — below-right
+  [20, -10],   // Boston — above-right
+];
+
+function renderMarkers(ctx, projection) {
+  const radius = 14;
+
+  CITIES.forEach((city, i) => {
+    const [x, y] = projection([city.lon, city.lat]) || [0, 0];
+    const [dx, dy] = LABEL_OFFSETS[i];
+
+    // White stroke ring (Warhol style)
+    ctx.beginPath();
+    ctx.arc(x, y, radius + 3, 0, 2 * Math.PI);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+
+    // Black filled circle
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = "#000";
+    ctx.fill();
+
+    // White number
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 16px 'Helvetica Neue', Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(i + 1), x, y + 1);
+
+    // City name — white stroke behind black text (Warhol knockout)
+    const labelX = x + dx;
+    const labelY = y + dy;
+
+    ctx.font = "bold 14px 'Helvetica Neue', Arial, sans-serif";
+    ctx.textAlign = dx > 0 ? "left" : "right";
+    ctx.textBaseline = "top";
+
+    // White stroke for legibility
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 4;
+    ctx.lineJoin = "round";
+    ctx.strokeText(city.name, labelX, labelY);
+    ctx.fillStyle = "#000";
+    ctx.fillText(city.name, labelX, labelY);
+
+    // Lat/lon coordinates
+    const coordStr = formatCoord(city.lat, city.lon);
+    ctx.font = "11px 'Helvetica Neue', Arial, sans-serif";
+
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 3;
+    ctx.strokeText(coordStr, labelX, labelY + 17);
+    ctx.fillStyle = "#000";
+    ctx.fillText(coordStr, labelX, labelY + 17);
+  });
+}
+
 async function loadWorldData() {
   const response = await fetch(WORLD_DATA_URL);
   const world = await response.json();
@@ -83,6 +215,11 @@ async function init() {
 
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
+
+    // Flight paths and markers (use red projection for positioning)
+    const projRedForPaths = fitProjection(PROJECTIONS[config.red].fn, width, height);
+    renderFlightPaths(ctx, projRedForPaths);
+    renderMarkers(ctx, projRedForPaths);
   }
 
   render();
