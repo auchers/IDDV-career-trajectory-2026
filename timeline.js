@@ -30,3 +30,86 @@ const CITY_ARRIVALS = [
 ];
 
 const TRACKS = ['STUDY', 'BUILD', 'LOVE'];
+
+function yearToPercent(year) {
+  return ((year - TIMELINE_START) / (TIMELINE_END - TIMELINE_START)) * 100;
+}
+
+function renderAxis() {
+  const axis = document.getElementById('timeline-axis');
+  axis.innerHTML = '';
+
+  for (let year = TIMELINE_START; year <= TIMELINE_END; year += 2) {
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    tick.style.left = `${yearToPercent(year)}%`;
+    tick.textContent = year;
+    axis.appendChild(tick);
+  }
+}
+
+function renderTracks() {
+  const container = document.getElementById('timeline-tracks');
+  container.innerHTML = '';
+
+  TRACKS.forEach(trackName => {
+    const row = document.createElement('div');
+    row.className = 'timeline-track';
+
+    const label = document.createElement('div');
+    label.className = 'timeline-track-label';
+    label.textContent = trackName;
+    row.appendChild(label);
+
+    const trackEvents = EVENTS.filter(e => e.track === trackName);
+
+    trackEvents.forEach(event => {
+      if (event.end !== undefined) {
+        // Duration bar
+        const endYear = event.end === null ? TIMELINE_END : event.end;
+        const leftPct = yearToPercent(event.start);
+        const widthPct = yearToPercent(endYear) - leftPct;
+
+        const bar = document.createElement('div');
+        bar.className = 'timeline-bar';
+        if (event.end === null) bar.classList.add('ongoing');
+        if (widthPct < 15) bar.classList.add('narrow');
+        bar.style.left = `${leftPct}%`;
+        bar.style.width = `${widthPct}%`;
+
+        const barLabel = document.createElement('span');
+        barLabel.className = 'bar-label';
+        barLabel.textContent = event.name;
+        bar.appendChild(barLabel);
+
+        row.appendChild(bar);
+      } else {
+        // Point event
+        const point = document.createElement('div');
+        point.className = 'timeline-point';
+        point.style.left = `${yearToPercent(event.start)}%`;
+
+        const pointLabel = document.createElement('span');
+        pointLabel.className = 'point-label';
+        pointLabel.textContent = event.name;
+        point.appendChild(pointLabel);
+
+        row.appendChild(point);
+      }
+    });
+
+    container.appendChild(row);
+  });
+}
+
+function renderCityLines() {
+  // implemented in Task 4
+}
+
+function renderTimeline() {
+  renderAxis();
+  renderTracks();
+  renderCityLines();
+}
+
+renderTimeline();
