@@ -10,7 +10,7 @@ const CITIES = [
   { name: "Boston", lat: 42.36, lon: -71.06 },
 ];
 
-function renderFlightPaths(ctx, projection) {
+function renderFlightPaths(ctx, projRed, projBlue) {
   ctx.save();
 
   for (let i = 0; i < CITIES.length - 1; i++) {
@@ -18,11 +18,23 @@ function renderFlightPaths(ctx, projection) {
     const to = [CITIES[i + 1].lon, CITIES[i + 1].lat];
     const interpolate = d3.geoInterpolate(from, to);
 
-    // Generate points along the great circle
+    // Alternate: even cities use red proj, odd use blue
+    const projFrom = i % 2 === 0 ? projRed : projBlue;
+    const projTo = (i + 1) % 2 === 0 ? projRed : projBlue;
+
+    // Generate points along the great circle, interpolating between projections
     const numPoints = 100;
     const points = Array.from({ length: numPoints + 1 }, (_, j) => {
       const t = j / numPoints;
-      return projection(interpolate(t));
+      const geoPoint = interpolate(t);
+      const pFrom = projFrom(geoPoint);
+      const pTo = projTo(geoPoint);
+      if (!pFrom || !pTo) return null;
+      // Lerp between the two projected positions
+      return [
+        pFrom[0] * (1 - t) + pTo[0] * t,
+        pFrom[1] * (1 - t) + pTo[1] * t,
+      ];
     }).filter((p) => p != null);
 
     if (points.length < 2) continue;
@@ -117,11 +129,13 @@ function measureLabel(ctx, city, coordStr) {
   return { width: Math.max(nameW, coordW), nameH: 15, coordH: 13 };
 }
 
-function renderMarkers(ctx, projection) {
+function renderMarkers(ctx, projRed, projBlue) {
   const radius = 9;
   const pad = 5;
 
   CITIES.forEach((city, i) => {
+    // Alternate: even cities use red projection, odd use blue
+    const projection = i % 2 === 0 ? projRed : projBlue;
     const projected = projection([city.lon, city.lat]);
     if (!projected) return;
     const [px, py] = projected;
@@ -283,10 +297,9 @@ async function init() {
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
 
-    // Flight paths and markers (use red projection for positioning)
-    const projRedForPaths = fitProjection(PROJECTIONS[config.red].fn, w, h);
-    renderFlightPaths(ctx, projRedForPaths);
-    renderMarkers(ctx, projRedForPaths);
+    // Flight paths and markers (alternate between projections)
+    renderFlightPaths(ctx, projRed, projBlue);
+    renderMarkers(ctx, projRed, projBlue);
   }
 
   render();
