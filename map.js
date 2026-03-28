@@ -87,23 +87,84 @@ function formatCoord(lat, lon) {
   return `${Math.abs(lat).toFixed(2)}\u00B0${latDir}, ${Math.abs(lon).toFixed(2)}\u00B0${lonDir}`;
 }
 
-// Manual label offsets to avoid overlap [dx, dy] from center of circle
+// Label offsets [dx, dy] from center of circle, and text alignment
 const LABEL_OFFSETS = [
-  [-14, 18],   // LA — below-left
-  [-14, -22],  // Berkeley — above-left
-  [14, -14],   // Tel Aviv — above-right
-  [14, 18],    // Brooklyn — below-right
-  [14, -22],   // Boston — above-right
+  { dx: -16, dy: 20, align: "right" },   // LA — below-left
+  { dx: -16, dy: -44, align: "right" },   // Berkeley — above-left
+  { dx: 16, dy: -16, align: "left" },     // Tel Aviv — above-right
+  { dx: 16, dy: 20, align: "left" },      // Brooklyn — below-right
+  { dx: 16, dy: -44, align: "left" },     // Boston — above-right
 ];
+
+const CITY_FONT = "bold 13px 'Helvetica Neue', Arial, sans-serif";
+const COORD_FONT = "10px 'Courier New', 'Courier', monospace";
+
+function measureLabel(ctx, city, coordStr) {
+  ctx.font = CITY_FONT;
+  const nameW = ctx.measureText(city.name).width;
+  ctx.font = COORD_FONT;
+  const coordW = ctx.measureText(coordStr).width;
+  return { width: Math.max(nameW, coordW), nameH: 15, coordH: 13 };
+}
 
 function renderMarkers(ctx, projection) {
   const radius = 9;
+  const pad = 5;
 
   CITIES.forEach((city, i) => {
-    const [x, y] = projection([city.lon, city.lat]) || [0, 0];
-    const [dx, dy] = LABEL_OFFSETS[i];
+    const projected = projection([city.lon, city.lat]);
+    if (!projected) return;
+    const [x, y] = projected;
+    const { dx, dy, align } = LABEL_OFFSETS[i];
+    const coordStr = formatCoord(city.lat, city.lon);
+    const m = measureLabel(ctx, city, coordStr);
+    const totalH = m.nameH + m.coordH;
 
-    // White stroke ring (Warhol style)
+    // Label anchor point
+    const labelX = x + dx;
+    const labelY = y + dy;
+
+    // Compute backing rect position
+    const rectX = align === "left" ? labelX - pad : labelX - m.width - pad;
+    const rectY = labelY - pad;
+    const rectW = m.width + pad * 2;
+    const rectH = totalH + pad * 2;
+
+    // Draw connector line from dot to label
+    ctx.save();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(labelX, labelY + totalH / 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // White backing panel with black border
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(rectX, rectY, rectW, rectH, 3);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // City name
+    ctx.font = CITY_FONT;
+    ctx.textAlign = align;
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#000";
+    ctx.fillText(city.name, labelX, labelY);
+
+    // Lat/lon coordinates
+    ctx.font = COORD_FONT;
+    ctx.fillStyle = "#444";
+    ctx.fillText(coordStr, labelX, labelY + m.nameH);
+
+    // White halo ring (Warhol style)
     ctx.beginPath();
     ctx.arc(x, y, radius + 2, 0, 2 * Math.PI);
     ctx.fillStyle = "#fff";
@@ -115,38 +176,12 @@ function renderMarkers(ctx, projection) {
     ctx.fillStyle = "#000";
     ctx.fill();
 
-    // White number
+    // White number centered in circle
     ctx.fillStyle = "#fff";
     ctx.font = "bold 11px 'Helvetica Neue', Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(i + 1), x, y);
-
-    // City name — white stroke behind black text (Warhol knockout)
-    const labelX = x + dx;
-    const labelY = y + dy;
-
-    ctx.font = "bold 12px 'Helvetica Neue', Arial, sans-serif";
-    ctx.textAlign = dx > 0 ? "left" : "right";
-    ctx.textBaseline = "top";
-
-    // White stroke for legibility
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 4;
-    ctx.lineJoin = "round";
-    ctx.strokeText(city.name, labelX, labelY);
-    ctx.fillStyle = "#000";
-    ctx.fillText(city.name, labelX, labelY);
-
-    // Lat/lon coordinates
-    const coordStr = formatCoord(city.lat, city.lon);
-    ctx.font = "9px 'Courier New', 'Courier', monospace";
-
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
-    ctx.strokeText(coordStr, labelX, labelY + 15);
-    ctx.fillStyle = "#000";
-    ctx.fillText(coordStr, labelX, labelY + 15);
   });
 }
 
