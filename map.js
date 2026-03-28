@@ -60,14 +60,35 @@ async function init() {
   const graticule = d3.geoGraticule().precision(2.5)();
   const outline = { type: "Sphere" };
 
-  // Render red projection only (for now)
-  const projRed = fitProjection(PROJECTIONS[config.red].fn, width, height);
-  const pathRed = d3.geoPath(projRed, ctx);
+  function render() {
+    const projRed = fitProjection(PROJECTIONS[config.red].fn, width, height);
+    const pathRed = d3.geoPath(projRed, ctx);
 
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, width, height);
+    const projBlue = fitProjection(PROJECTIONS[config.blue].fn, width, height);
+    const pathBlue = d3.geoPath(projBlue, ctx);
 
-  renderProjection(ctx, pathRed, worldData.land, graticule, outline, "#f00");
+    // Clear
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, width, height);
+
+    // Red projection
+    renderProjection(ctx, pathRed, worldData.land, graticule, outline, "#f00");
+
+    // Multiply blend
+    ctx.globalCompositeOperation = "multiply";
+
+    // Blue projection
+    renderProjection(ctx, pathBlue, worldData.land, graticule, outline, "#00f");
+
+    // Reset composite
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  render();
+
+  // Expose render + config for controls (Task 5)
+  window._map = { render, config, width, height, worldData, ctx };
 }
 
 init();
