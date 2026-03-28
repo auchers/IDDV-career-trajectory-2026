@@ -2,41 +2,64 @@
 
 ## Overview
 
-A 16:9 landscape card for a panel presentation. The top ~60% is a Warhol-dance-diagram-styled world map showing career locations connected by flight-path arcs. The bottom ~40% (future work) holds three chronological timeline tracks: LEARN, WORK, LOVE.
+A 16:9 landscape card for a panel presentation. The top ~60% is a dual-projection overlay world map showing career locations connected by flight-path arcs. The bottom ~40% (future work) holds three chronological timeline tracks: LEARN, WORK, LOVE.
+
+The dual-projection overlay serves as a visual metaphor: the same career journey rendered through two different lenses, where agreement shows as solid black and divergence bleeds out as red and blue fringe — mirroring the ambiguity inherent in any career narrative.
 
 This spec covers the **map portion only**.
 
 ## Visual Style
 
-Inspired directly by Andy Warhol dance step diagrams:
+Black, red, and blue — inspired by:
+- **Andy Warhol dance step diagrams**: bold graphic shapes, dashed directional arrows, high contrast
+- **D3 projection comparison**: two projections overlaid via canvas `multiply` blend mode
 
-- **Pure black and white** — no grays, no color
+Key properties:
+- **Three-color palette**: black (overlap), red (projection A), blue (projection B), white (background)
 - **Dashed directional lines with arrowheads** for flight paths between locations
-- **Bold graphic shapes** — solid black landmasses on white background
-- **Thick stroke weights** — 2-4px for paths, 1-2px for country borders
+- **Bold graphic shapes** — solid filled landmasses
+- **Thick stroke weights** — 2-4px for paths
 - **High contrast, print-like aesthetic**
+- **Graticules** for each projection in their respective colors at low opacity
 
 ## Tech Stack
 
 - Single HTML page
-- D3.js v7 for geo projections and SVG rendering
+- D3.js v7 + d3-geo-projection for extended projection support
+- **Canvas 2D** rendering (not SVG) — required for `globalCompositeOperation: "multiply"` blend mode
 - TopoJSON (Natural Earth 110m) for world country boundaries
-- Vanilla CSS for styling
+- Vanilla CSS for page layout and controls
 - No build step — open the HTML file directly
 
-## Map Projections
+## Dual-Projection Rendering
 
-Two projections available, toggled via URL parameter:
+### How It Works
 
-| Projection | D3 Function | Notes |
-|---|---|---|
-| Waterman Butterfly | `d3.geoPolyhedralWaterman()` | Default. Surprising, low-distortion butterfly shape |
-| Conic Equal-Area | `d3.geoConicEqualArea()` | Centered ~40°N, -20°W to frame US + Middle East. Fits 16:9 naturally |
+1. Render projection A (red) landmasses and graticule to canvas
+2. Set `globalCompositeOperation = "multiply"`
+3. Render projection B (blue) landmasses and graticule to canvas
+4. Where both projections agree → red * blue = **black**
+5. Where only A has land → **red** fringe
+6. Where only B has land → **blue** fringe
+
+Both projections are centered and scaled to the same canvas, fitted to the viewport.
+
+### Projection Pairings
+
+Dropdowns allow selecting any D3 projection for red and blue channels. The following curated pairings are highlighted as presets:
+
+| Preset Name | Red (Projection A) | Blue (Projection B) | Why |
+|---|---|---|---|
+| **"Every projection is a compromise"** (default) | Natural Earth | Winkel Tripel | Natural Earth was designed for data visualization; Winkel Tripel is Nat Geo's choice. Two authoritative compromises. Most overlap in mid-latitudes where career cities live. |
+| "Same story, different emphasis" | Kavrayskiy VII | Robinson | Near-identical pseudocylindrical projections. Subtle fringe — like two people telling the same story slightly differently. |
+| "Two branches, same family" | American Polyconic | Rectangular Polyconic | Same mathematical family, different parameters. Sibling projections. |
+| "Butterfly wings" | Butterfly (gnomonic) | Butterfly (Collignon) | Angular diamond/butterfly shapes. Dramatic visual divergence. Bold graphic energy — most Warhol-like. |
 
 ### URL Parameters
 
-- `?projection=waterman` (default) or `?projection=conic` — selects the active projection
-- `?controls=true` — shows a small toggle control at the bottom of the map to switch between projections interactively
+- `?red=naturalEarth1&blue=winkelTripel` — selects projections by D3 function name (defaults to Natural Earth + Winkel Tripel)
+- `?preset=butterfly` — shorthand to load a curated pairing (`compromise`, `subtle`, `polyconic`, `butterfly`)
+- `?controls=true` — shows dropdown selectors and preset buttons
 
 When `controls` is not `true`, no UI chrome is visible — the map is presentation-ready.
 
@@ -54,12 +77,12 @@ Five locations, numbered chronologically:
 
 ### Marker Design
 
-Each stop is annotated with:
+Each stop is annotated with: // i'd like to add in the white stroke around the dot and text (as in the warhal diagrams)
 - **Bold numbered circle** — black fill, white number
 - **City name** — bold sans-serif, positioned near the circle
 - **Lat/lon coordinates** — smaller text below the city name (e.g. `34.05°N, 118.24°W`)
 
-Labels are positioned to avoid overlap with paths and landmasses. Manual nudge offsets per city if needed.
+Markers are rendered as an SVG overlay on top of the canvas (or drawn on canvas after the multiply pass), using projection A's coordinates for positioning. Labels have manual nudge offsets per city to avoid overlap.
 
 ## Flight Paths
 
@@ -72,47 +95,44 @@ Great-circle arcs between consecutive stops:
 
 ### Path Styling
 
-- **Dashed stroke**: `stroke-dasharray` with thick dashes and visible gaps (e.g. `12,6`)
-- **Arrowhead markers**: SVG `<marker>` elements at the destination end of each path
+- **Dashed stroke**: thick dashes with visible gaps (canvas `setLineDash([12, 6])`)
+- **Arrowhead**: drawn manually at the destination end of each path
 - **Stroke width**: 2-3px
-- **Black only**
+- **Black** — paths sit on top of both projections, in the "agreement" color
+- Rendered after the multiply composite pass so they appear on top
 
-D3's `d3.geoPath` with `d3.geoInterpolate` handles great-circle interpolation natively.
-
-## SVG Structure
-
-```
-<svg>
-  <defs>
-    <marker id="arrowhead"> ... </marker>
-  </defs>
-  <g class="land">         <!-- country boundaries, filled black -->
-  <g class="flight-paths">  <!-- dashed great-circle arcs with arrows -->
-  <g class="markers">       <!-- numbered circles + labels for each city -->
-</svg>
-```
+D3's `d3.geoInterpolate` generates points along the great-circle arc; drawn as a path on the canvas.
 
 ## Layout
 
-- Map SVG fills the top portion of the viewport
-- Aspect ratio of the SVG adapts to the chosen projection
-- For Waterman: scale and translate to emphasize the N. America + Europe/Middle East wings, clipping the southern hemisphere wings if they extend beyond the viewport
-- For Conic: natural 16:9 fit, centered on the Atlantic
+- Canvas fills the top ~60% of a 16:9 viewport
+- Both projections centered and scaled to fit the same bounding box
+- Controls (when visible) appear above the canvas as dropdown selectors
 
-## Rendering Details
+## Rendering Pipeline
 
-- Land: `fill: black`, `stroke: none`
-- Country borders: `stroke: white`, `stroke-width: 0.5px` (subtle separation within black land)
-- Ocean/background: white
-- Graticule (optional): thin dashed gray lines for the lat/lon grid — adds to the cartographic/technical feel
+```
+1. Clear canvas (white)
+2. Draw projection A land (red fill)
+3. Draw projection A graticule (red stroke, low opacity)
+4. Draw projection A outline (red stroke)
+5. Set globalCompositeOperation = "multiply"
+6. Draw projection B land (blue fill)
+7. Draw projection B graticule (blue stroke, low opacity)
+8. Draw projection B outline (blue stroke)
+9. Reset composite to "source-over"
+10. Draw flight paths (black dashed + arrowheads)
+11. Draw city markers + labels (black circles, white numbers, black text)
+```
 
 ## File Structure
 
 ```
 career-trajectory/
-├── index.html          # Main page
-├── style.css           # Warhol-style CSS
-├── map.js              # D3 map rendering logic
+├── index.html          # Main page — canvas + controls
+├── style.css           # Layout and control styling
+├── map.js              # D3 projection rendering, compositing, flight paths
+├── projections.js      # Projection registry, presets, URL param parsing
 └── docs/
     └── superpowers/
         └── specs/
@@ -122,5 +142,5 @@ career-trajectory/
 ## Future Work (not in this spec)
 
 - Bottom section: three horizontal timeline tracks (LEARN, WORK, LOVE) with JS for accurate date spacing
-- Export to Figma or SVG for final presentation polish
-- Possible hand-drawn SVG filter for organic texture
+- Export to Figma or high-res PNG for final presentation
+- Possible hand-drawn canvas filter for organic texture
