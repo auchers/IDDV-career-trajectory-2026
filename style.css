@@ -148,26 +148,29 @@ body {
   width: 100vw;
   max-width: 1600px;
   position: relative;
-  padding: 0 0 24px;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  padding: 16px 40px 32px;
+  overflow: hidden;
 }
 
 .timeline-axis {
   position: relative;
-  height: 32px;
-  margin-left: 80px;
-  border-bottom: 1px solid #000;
+  height: 24px;
+  margin-left: 56px;
+  margin-right: 8px;
+  border-bottom: 1px solid #ccc;
 }
 
 .timeline-axis .tick {
   position: absolute;
   bottom: 0;
   transform: translateX(-50%);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  color: #999;
+  letter-spacing: 0;
   line-height: 1;
-  padding-bottom: 6px;
+  padding-bottom: 5px;
 }
 
 .timeline-axis .tick::after {
@@ -176,67 +179,73 @@ body {
   bottom: 0;
   left: 50%;
   width: 1px;
-  height: 4px;
-  background: #000;
+  height: 3px;
+  background: #ccc;
 }
 
 .timeline-tracks {
   position: relative;
-  margin-left: 80px;
+  margin-left: 56px;
+  margin-right: 8px;
 }
 
 .timeline-track {
   position: relative;
-  height: 36px;
-  margin-top: 8px;
+  height: 32px;
+  margin-top: 6px;
 }
 
 .timeline-track-label {
   position: absolute;
-  left: -80px;
+  left: -56px;
   top: 50%;
   transform: translateY(-50%);
-  width: 72px;
+  width: 48px;
   text-align: right;
-  font-size: 11px;
-  font-weight: 700;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.5px;
+  color: #555;
 }
 
 .timeline-bar {
   position: absolute;
-  top: 8px;
-  height: 20px;
+  top: 6px;
+  height: 18px;
   background: #000;
   outline: 2px solid #fff;
   display: flex;
   align-items: center;
-  padding: 0 6px;
+  padding: 0 5px;
   overflow: visible;
   white-space: nowrap;
+  border-radius: 1px;
 }
 
 .timeline-bar .bar-label {
   color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
   line-height: 1;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .timeline-bar.narrow .bar-label {
-  color: #000;
+  color: #555;
   position: absolute;
-  top: -14px;
+  top: -13px;
   left: 0;
+  overflow: visible;
 }
 
 .timeline-bar.narrow.label-below .bar-label {
   top: auto;
-  bottom: -14px;
+  bottom: -13px;
 }
 
 .timeline-bar.ongoing {
@@ -245,9 +254,9 @@ body {
 
 .timeline-point {
   position: absolute;
-  top: 14px;
-  width: 8px;
-  height: 8px;
+  top: 12px;
+  width: 6px;
+  height: 6px;
   background: #000;
   border-radius: 50%;
   transform: translateX(-50%);
@@ -255,21 +264,23 @@ body {
 
 .timeline-point .point-label {
   position: absolute;
-  bottom: 14px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  color: #555;
+  letter-spacing: 0.3px;
 }
 
 .city-line {
   position: absolute;
-  top: -40px;
+  top: -8px;
   bottom: 0;
   width: 1px;
-  background: #000;
+  background: rgba(0, 0, 0, 0.15);
   transform: translateX(-50%);
   pointer-events: none;
   z-index: 1;
@@ -277,17 +288,18 @@ body {
 
 .city-marker {
   position: absolute;
-  top: -52px;
+  top: -20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   background: #000;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 10px;
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 8px;
   font-weight: 700;
 }
