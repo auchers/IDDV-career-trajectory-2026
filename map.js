@@ -97,12 +97,13 @@ const LABEL_OFFSETS = [
 ];
 
 // Pixel nudges to separate overlapping dot pairs (applied to projected coords)
+// Tune these once a final projection is chosen
 const DOT_NUDGES = [
-  { nx: -10, ny: 12 },   // LA — push down-left from Berkeley
-  { nx: 10, ny: -12 },   // Berkeley — push up-right from LA
-  { nx: 0, ny: 0 },      // Tel Aviv — no nudge
-  { nx: -10, ny: 12 },   // Brooklyn — push down-left from Boston
-  { nx: 10, ny: -12 },   // Boston — push up-right from Brooklyn
+  { nx: 0, ny: 0 },   // LA
+  { nx: 0, ny: 0 },   // Berkeley
+  { nx: 0, ny: 0 },   // Tel Aviv
+  { nx: 0, ny: 0 },   // Brooklyn
+  { nx: 0, ny: 0 },   // Boston
 ];
 
 const CITY_FONT = "bold 13px 'Helvetica Neue', Arial, sans-serif";
