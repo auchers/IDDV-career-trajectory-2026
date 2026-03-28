@@ -296,7 +296,7 @@ async function init() {
 
   // Controls
   if (config.showControls) {
-    document.getElementById("controls").classList.remove("hidden");
+    document.getElementById("projection-doc").classList.remove("hidden");
 
     const redSelect = document.getElementById("red-select");
     const blueSelect = document.getElementById("blue-select");

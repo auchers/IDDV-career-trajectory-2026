@@ -6,12 +6,116 @@
 
 body {
   background: #fff;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
 }
+
+/* ── Header ──────────────────────────────────── */
+
+#card-header {
+  width: 100vw;
+  max-width: 1600px;
+  padding: 32px 40px 20px;
+}
+
+#card-header h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: #000;
+  margin-bottom: 8px;
+}
+
+#card-header .subtitle {
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #555;
+  max-width: 600px;
+  margin-bottom: 16px;
+}
+
+/* ── Projection documentation (replaces old controls) ── */
+
+.projection-doc {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.projection-doc.hidden {
+  display: none;
+}
+
+.projection-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.projection-label {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.projection-label.red {
+  color: #c00;
+}
+
+.projection-label.blue {
+  color: #00c;
+}
+
+.projection-field select {
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  padding: 3px 6px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+}
+
+.projection-field select:hover {
+  border-color: #000;
+}
+
+.preset-row {
+  display: flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.preset-row button {
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  color: #555;
+  transition: all 0.15s;
+}
+
+.preset-row button:hover {
+  border-color: #000;
+  color: #000;
+}
+
+/* ── Map ─────────────────────────────────────── */
 
 #map-canvas {
   display: block;
@@ -20,72 +124,10 @@ body {
   aspect-ratio: 16 / 9;
 }
 
-.controls {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 12px 24px;
-  font-size: 14px;
-}
-
-.controls.hidden {
-  display: none;
-}
-
-.control-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.control-row label {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 12px;
-}
-
-.control-row label[for="red-select"] {
-  color: #f00;
-}
-
-.control-row label[for="blue-select"] {
-  color: #00f;
-}
-
-.control-row select {
-  font-family: inherit;
-  font-size: 14px;
-  padding: 4px 8px;
-  border: 2px solid #000;
-  background: #fff;
-}
-
-.preset-row {
-  display: flex;
-  gap: 8px;
-}
-
-.preset-row button {
-  font-family: inherit;
-  font-size: 12px;
-  padding: 4px 12px;
-  border: 2px solid #000;
-  background: #fff;
-  cursor: pointer;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.preset-row button:hover {
-  background: #000;
-  color: #fff;
-}
+/* ── Print ────────────────────────────────────── */
 
 @media print {
-  .controls {
+  .projection-doc {
     display: none !important;
   }
 
