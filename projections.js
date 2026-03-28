@@ -42,7 +42,7 @@ const PRESETS = {
     blue: "rectangularPolyconic",
   },
   butterfly: {
-    name: "Butterfly wings",
+    name: "Dissolve to transform",
     red: "polyhedralButterfly",
     blue: "polyhedralCollignon",
   },
