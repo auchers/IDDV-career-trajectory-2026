@@ -83,3 +83,14 @@ body {
   background: #000;
   color: #fff;
 }
+
+@media print {
+  .controls {
+    display: none !important;
+  }
+
+  #map-canvas {
+    width: 100%;
+    max-width: none;
+  }
+}

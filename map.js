@@ -185,24 +185,27 @@ async function init() {
   canvas.height = rect.height * dpr;
   ctx.scale(dpr, dpr);
 
-  const width = rect.width;
-  const height = rect.height;
+  let width = rect.width;
+  let height = rect.height;
 
   const worldData = await loadWorldData();
   const graticule = d3.geoGraticule().precision(2.5)();
   const outline = { type: "Sphere" };
 
   function render() {
-    const projRed = fitProjection(PROJECTIONS[config.red].fn, width, height);
+    const w = width;
+    const h = height;
+
+    const projRed = fitProjection(PROJECTIONS[config.red].fn, w, h);
     const pathRed = d3.geoPath(projRed, ctx);
 
-    const projBlue = fitProjection(PROJECTIONS[config.blue].fn, width, height);
+    const projBlue = fitProjection(PROJECTIONS[config.blue].fn, w, h);
     const pathBlue = d3.geoPath(projBlue, ctx);
 
     // Clear
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, w, h);
 
     // Red projection
     renderProjection(ctx, pathRed, worldData.land, graticule, outline, "#f00");
@@ -217,7 +220,7 @@ async function init() {
     ctx.globalCompositeOperation = "source-over";
 
     // Flight paths and markers (use red projection for positioning)
-    const projRedForPaths = fitProjection(PROJECTIONS[config.red].fn, width, height);
+    const projRedForPaths = fitProjection(PROJECTIONS[config.red].fn, w, h);
     renderFlightPaths(ctx, projRedForPaths);
     renderMarkers(ctx, projRedForPaths);
   }
@@ -265,6 +268,19 @@ async function init() {
       presetRow.appendChild(btn);
     });
   }
+
+  // Resize handler
+  window.addEventListener("resize", () => {
+    const r = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = r.width * dpr;
+    canvas.height = r.height * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    width = r.width;
+    height = r.height;
+    render();
+  });
 }
 
 init();
