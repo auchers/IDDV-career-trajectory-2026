@@ -96,6 +96,15 @@ const LABEL_OFFSETS = [
   { dx: 16, dy: -44, align: "left" },     // Boston — above-right
 ];
 
+// Pixel nudges to separate overlapping dot pairs (applied to projected coords)
+const DOT_NUDGES = [
+  { nx: -10, ny: 12 },   // LA — push down-left from Berkeley
+  { nx: 10, ny: -12 },   // Berkeley — push up-right from LA
+  { nx: 0, ny: 0 },      // Tel Aviv — no nudge
+  { nx: -10, ny: 12 },   // Brooklyn — push down-left from Boston
+  { nx: 10, ny: -12 },   // Boston — push up-right from Brooklyn
+];
+
 const CITY_FONT = "bold 13px 'Helvetica Neue', Arial, sans-serif";
 const COORD_FONT = "10px 'Courier New', 'Courier', monospace";
 
@@ -114,7 +123,10 @@ function renderMarkers(ctx, projection) {
   CITIES.forEach((city, i) => {
     const projected = projection([city.lon, city.lat]);
     if (!projected) return;
-    const [x, y] = projected;
+    const [px, py] = projected;
+    const { nx, ny } = DOT_NUDGES[i];
+    const x = px + nx;
+    const y = py + ny;
     const { dx, dy, align } = LABEL_OFFSETS[i];
     const coordStr = formatCoord(city.lat, city.lon);
     const m = measureLabel(ctx, city, coordStr);
@@ -161,7 +173,7 @@ function renderMarkers(ctx, projection) {
 
     // Lat/lon coordinates
     ctx.font = COORD_FONT;
-    ctx.fillStyle = "#444";
+    ctx.fillStyle = "#000";
     ctx.fillText(coordStr, labelX, labelY + m.nameH);
 
     // White halo ring (Warhol style)
