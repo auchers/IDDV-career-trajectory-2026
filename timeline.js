@@ -103,7 +103,22 @@ function renderTracks() {
 }
 
 function renderCityLines() {
-  // implemented in Task 4
+  const container = document.getElementById('timeline-tracks');
+
+  CITY_ARRIVALS.forEach(arrival => {
+    if (arrival.year === null) return; // skip LA (before timeline range)
+
+    const line = document.createElement('div');
+    line.className = 'city-line';
+    line.style.left = `${yearToPercent(arrival.year)}%`;
+
+    const marker = document.createElement('div');
+    marker.className = 'city-marker';
+    marker.textContent = arrival.number;
+    line.appendChild(marker);
+
+    container.appendChild(line);
+  });
 }
 
 function renderTimeline() {
