@@ -127,4 +127,8 @@ function renderTimeline() {
   renderCityLines();
 }
 
+window.addEventListener('resize', () => {
+  renderTimeline();
+});
+
 renderTimeline();
