@@ -36,14 +36,16 @@ function renderFlightPaths(ctx, projection) {
       }
     };
 
-    // Black outline behind white dashes
-    ctx.setLineDash([12, 6]);
+    // Black solid outline behind white dashes
+    ctx.setLineDash([]);
     drawArc();
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 5;
+    ctx.lineCap = "round";
     ctx.stroke();
 
     // White dashed arc on top
+    ctx.setLineDash([12, 6]);
     drawArc();
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 2.5;
@@ -118,7 +120,7 @@ function renderMarkers(ctx, projection) {
     ctx.font = "bold 11px 'Helvetica Neue', Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(String(i + 1), x, y + 1);
+    ctx.fillText(String(i + 1), x, y);
 
     // City name — white stroke behind black text (Warhol knockout)
     const labelX = x + dx;
@@ -138,10 +140,10 @@ function renderMarkers(ctx, projection) {
 
     // Lat/lon coordinates
     const coordStr = formatCoord(city.lat, city.lon);
-    ctx.font = "9px 'Helvetica Neue', Arial, sans-serif";
+    ctx.font = "9px 'Courier New', 'Courier', monospace";
 
     ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.strokeText(coordStr, labelX, labelY + 15);
     ctx.fillStyle = "#000";
     ctx.fillText(coordStr, labelX, labelY + 15);
