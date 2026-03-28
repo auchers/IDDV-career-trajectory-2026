@@ -170,7 +170,7 @@ body {
   display: flex;
   align-items: center;
   padding: 0 6px;
-  overflow: hidden;
+  overflow: visible;
   white-space: nowrap;
 }
 
@@ -180,18 +180,19 @@ body {
   font-weight: 600;
   letter-spacing: 0.5px;
   line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .timeline-bar.narrow .bar-label {
   color: #000;
   position: absolute;
-  top: -16px;
+  top: -14px;
   left: 0;
-  overflow: visible;
 }
 
 .timeline-bar.ongoing {
-  background: linear-gradient(to right, #000 85%, transparent);
+  background: linear-gradient(to right, #000 60%, rgba(0, 0, 0, 0.15));
 }
 
 .timeline-point {
@@ -217,17 +218,18 @@ body {
 
 .city-line {
   position: absolute;
-  top: 0;
+  top: -40px;
   bottom: 0;
   width: 1px;
   background: #000;
   transform: translateX(-50%);
   pointer-events: none;
+  z-index: 1;
 }
 
 .city-marker {
   position: absolute;
-  top: -28px;
+  top: -52px;
   left: 50%;
   transform: translateX(-50%);
   width: 18px;
