@@ -176,10 +176,14 @@ async function loadWorldData() {
 
 function fitProjection(projectionFn, width, height) {
   const projection = projectionFn();
-  // fitSize scales uniformly (no stretching) and centers within [width, height].
-  // Add padding so the projection doesn't touch the canvas edges.
+  // Fit to a taller virtual canvas so the projection is larger than the visible area.
+  // The bottom (southern hemisphere spikes) will extend below the wrapper and get clipped.
+  const overflowY = height * 0.35;
   const pad = 16;
-  projection.fitExtent([[pad, pad], [width - pad, height - pad]], { type: "Sphere" });
+  projection.fitExtent(
+    [[pad, pad], [width - pad, height + overflowY - pad]],
+    { type: "Sphere" }
+  );
   return projection;
 }
 

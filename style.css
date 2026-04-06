@@ -136,6 +136,7 @@ body {
   width: 100%;
   max-width: 1600px;
   position: relative;
+  overflow: hidden;
 }
 
 #map-canvas {
