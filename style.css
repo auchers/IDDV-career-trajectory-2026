@@ -412,7 +412,7 @@ body {
 
 .timeline-point .point-label {
   position: absolute;
-  bottom: 12px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%) rotate(-45deg);
   white-space: nowrap;
