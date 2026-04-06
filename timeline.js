@@ -66,8 +66,9 @@ function renderTracks() {
     trackEvents.forEach(event => {
       if (event.end !== undefined) {
         const endYear = event.end === null ? TIMELINE_END : event.end;
-        const leftPct = yearToPercent(event.start);
-        const widthPct = yearToPercent(endYear) - leftPct;
+        const gap = 0.4; // percent gap on each side
+        const leftPct = yearToPercent(event.start) + gap;
+        const widthPct = yearToPercent(endYear) - yearToPercent(event.start) - gap * 2;
 
         const bar = document.createElement('div');
         bar.className = 'timeline-bar';
