@@ -68,7 +68,7 @@ function renderFlightPaths(ctx, projRed, projBlue) {
     // Black solid outline behind white dashes
     ctx.setLineDash([]);
     drawArc();
-    ctx.strokeStyle = "#000";
+    ctx.strokeStyle = "#444";
     ctx.lineWidth = 5;
     ctx.lineCap = "round";
     ctx.stroke();
@@ -100,7 +100,7 @@ function renderFlightPaths(ctx, projRed, projBlue) {
     );
     ctx.closePath();
     // Black outline arrow
-    ctx.strokeStyle = "#000";
+    ctx.strokeStyle = "#444";
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = "#fff";
@@ -145,7 +145,7 @@ function renderMarkers(ctx, projRed, projBlue) {
     ctx.strokeText(city.name, labelX, labelY);
 
     // Black fill
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#444";
     ctx.fillText(city.name, labelX, labelY);
 
     // White halo ring
@@ -157,7 +157,7 @@ function renderMarkers(ctx, projRed, projBlue) {
     // Black filled circle
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#444";
     ctx.fill();
 
     // White number centered in circle
