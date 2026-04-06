@@ -402,24 +402,30 @@ body {
 .timeline-point {
   position: absolute;
   top: 6px;
+  transform: translateX(-50%);
+}
+
+.timeline-point::before {
+  content: '';
+  display: block;
   width: 7px;
   height: 7px;
   background: #444;
-  border-radius: 0;
-  transform: translate(-50%) rotate(45deg);
+  transform: rotate(45deg);
 }
 
 .timeline-point .point-label {
   position: absolute;
-  top: 12px;
+  top: 14px;
   left: 50%;
-  transform: translateX(-50%) rotate(-45deg);
+  transform: translateX(-50%);
   white-space: nowrap;
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
   font-size: 10px;
   font-weight: 500;
   color: #333;
   letter-spacing: 0.3px;
+  text-align: center;
 }
 
 .city-line {
