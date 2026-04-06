@@ -66,7 +66,7 @@ function renderTracks() {
     trackEvents.forEach(event => {
       if (event.end !== undefined) {
         const endYear = event.end === null ? TIMELINE_END : event.end;
-        const gap = 0.4; // percent gap on each side
+        const gap = 0.2; // percent gap on each side
         const leftPct = yearToPercent(event.start) + gap;
         const widthPct = yearToPercent(endYear) - yearToPercent(event.start) - gap * 2;
 
