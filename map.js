@@ -240,32 +240,12 @@ async function init() {
   let splitBlue = config.blue;
   let animationId = null;
 
-  // Offscreen canvases for compositing the two states before crossfading
-  const offA = document.createElement("canvas");
-  const offB = document.createElement("canvas");
-  const ctxA = offA.getContext("2d");
-  const ctxB = offB.getContext("2d");
-
-  function syncOffscreenSize() {
-    offA.width = canvas.width;
-    offA.height = canvas.height;
-    offB.width = canvas.width;
-    offB.height = canvas.height;
-  }
-  syncOffscreenSize();
-
-  // Render a full composited frame (red + blue with multiply) to a given context
-  function renderFrame(tCtx, pathRed, pathBlue, land, grat, w, h) {
-    const dpr = window.devicePixelRatio || 1;
-    tCtx.setTransform(1, 0, 0, 1, 0, 0);
-    tCtx.scale(dpr, dpr);
-    tCtx.globalCompositeOperation = "source-over";
-    tCtx.fillStyle = "#fff";
-    tCtx.fillRect(0, 0, w, h);
-    renderProjection(tCtx, pathRed, land, grat, currentTheme.projA);
-    tCtx.globalCompositeOperation = "multiply";
-    renderProjection(tCtx, pathBlue, land, grat, currentTheme.projB);
-    tCtx.globalCompositeOperation = "source-over";
+  // Lerp a single projected point between two projections (for markers/flight paths)
+  function lerpPoint(projA, projB, coords, t) {
+    const a = projA(coords);
+    const b = projB(coords);
+    if (!a || !b) return a || b;
+    return [a[0] * (1 - t) + b[0] * t, a[1] * (1 - t) + b[1] * t];
   }
 
   function render() {
@@ -273,54 +253,42 @@ async function init() {
     const h = height;
 
     const projRed = fitProjection(PROJECTIONS[splitRed].fn, w, h);
+    const pathRed = d3.geoPath(projRed, ctx);
+
     const projBlueSplit = fitProjection(PROJECTIONS[splitBlue].fn, w, h);
+    const pathBlueSplit = d3.geoPath(projBlueSplit, ctx);
 
-    if (blendT < 0.01 || blendT > 0.99) {
-      // No animation — render directly to main canvas
-      const projBlue = blendT < 0.01 ? projRed : projBlueSplit;
-      const pathRed = d3.geoPath(projRed, ctx);
-      const pathBlue = d3.geoPath(projBlue, ctx);
+    // Clear
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
 
-      ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, w, h);
-      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projA);
-      ctx.globalCompositeOperation = "multiply";
-      renderProjection(ctx, pathBlue, worldData.land, graticule, currentTheme.projB);
-      ctx.globalCompositeOperation = "source-over";
-      renderFlightPaths(ctx, projRed, projBlue);
-      renderMarkers(ctx, projRed, projBlue);
+    // Red projection (always the same)
+    renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projA);
+
+    // Multiply blend
+    ctx.globalCompositeOperation = "multiply";
+
+    // Blue land: crossfade between unified (red's path) and split (blue's path)
+    if (blendT < 0.01) {
+      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
+    } else if (blendT > 0.99) {
+      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
     } else {
-      // Animating — render unified and split frames to offscreen canvases,
-      // then crossfade the composited results onto the main canvas.
-      syncOffscreenSize();
-
-      const pathRedA = d3.geoPath(projRed, ctxA);
-      const pathBlueA = d3.geoPath(projRed, ctxA); // unified: same as red
-      renderFrame(ctxA, pathRedA, pathBlueA, worldData.land, graticule, w, h);
-
-      const pathRedB = d3.geoPath(projRed, ctxB);
-      const pathBlueB = d3.geoPath(projBlueSplit, ctxB); // split: actual blue
-      renderFrame(ctxB, pathRedB, pathBlueB, worldData.land, graticule, w, h);
-
-      // Crossfade the two composited frames
-      ctx.globalCompositeOperation = "source-over";
-      ctx.globalAlpha = 1;
-      ctx.drawImage(offA, 0, 0);
+      ctx.globalAlpha = 1 - blendT;
+      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
       ctx.globalAlpha = blendT;
-      ctx.drawImage(offB, 0, 0);
-      ctx.globalAlpha = 1;
-
-      // Markers/flights: interpolate positions
-      const projBlueBlend = (coords) => {
-        const a = projRed(coords);
-        const b = projBlueSplit(coords);
-        if (!a || !b) return a || b;
-        return [a[0] * (1 - blendT) + b[0] * blendT, a[1] * (1 - blendT) + b[1] * blendT];
-      };
-      renderFlightPaths(ctx, projRed, projBlueBlend);
-      renderMarkers(ctx, projRed, projBlueBlend);
+      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
+      ctx.globalAlpha = 1.0;
     }
+
+    // Reset composite
+    ctx.globalCompositeOperation = "source-over";
+
+    // Flight paths and markers: smoothly interpolate positions
+    const projBlueForPaths = (coords) => lerpPoint(projRed, projBlueSplit, coords, blendT);
+    renderFlightPaths(ctx, projRed, projBlueForPaths);
+    renderMarkers(ctx, projRed, projBlueForPaths);
   }
 
   render();
