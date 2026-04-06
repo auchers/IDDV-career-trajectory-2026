@@ -324,12 +324,20 @@ async function init() {
     animationId = requestAnimationFrame(tick);
   }
 
+  function toggleSplit() {
+    unified = !unified;
+    animateTo(unified ? 0 : 1);
+    const btn = document.getElementById("split-toggle");
+    if (btn) btn.textContent = unified ? "Split projections apart" : "Merge projections";
+  }
+
   window.addEventListener("keydown", (e) => {
     if (e.code !== "Space" || e.target.tagName === "SELECT") return;
     e.preventDefault();
-    unified = !unified;
-    animateTo(unified ? 0 : 1);
+    toggleSplit();
   });
+
+  document.getElementById("split-toggle").addEventListener("click", toggleSplit);
 
   // Side panel toggle
   const panel = document.getElementById("side-panel");
