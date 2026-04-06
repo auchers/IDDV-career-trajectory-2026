@@ -437,7 +437,7 @@ body {
 
 .city-marker {
   position: absolute;
-  bottom: -22px;
+  bottom: -24px;
   left: 50%;
   transform: translateX(-50%);
   height: auto;
@@ -446,10 +446,26 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 9px;
-  letter-spacing: 0.2px;
+  gap: 2px;
   white-space: nowrap;
+}
+
+.cm-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #444;
+  color: #fff;
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 8px;
   font-weight: 700;
+}
+
+.cm-arrow {
+  color: #aaa;
+  font-size: 10px;
+  line-height: 1;
 }
