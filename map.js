@@ -240,49 +240,63 @@ async function init() {
   let splitBlue = config.blue;
   let animationId = null;
 
-  // Interpolate between two projections using the Observable/Bostock technique:
-  // Lerp raw projection outputs, then fit scale and translate independently.
-  // See: https://observablehq.com/@d3/projection-transitions
-  function interpolateProjection(projFnA, projFnB, w, h) {
-    const sphere = { type: "Sphere" };
-    const overflowY = h * 0.35;
-    const pad = 16;
-    const extent = [[pad, pad - overflowY], [w - pad, h - pad]];
-
-    // Fit each projection to get its scale and translate
-    const pA = projFnA().fitExtent(extent, sphere);
-    const pB = projFnB().fitExtent(extent, sphere);
-    const scaleA = pA.scale(), translateA = pA.translate();
-    const scaleB = pB.scale(), translateB = pB.translate();
-
-    // Get raw projection functions — fall back to using the fitted projection
-    // for polyhedral/butterfly projections that don't expose .raw
-    const rawA = pA.raw || ((x, y) => {
-      const p = pA([x * 180 / Math.PI, y * 180 / Math.PI]);
-      return p ? [(p[0] - translateA[0]) / scaleA, (p[1] - translateA[1]) / scaleA] : [0, 0];
-    });
-    const rawB = pB.raw || ((x, y) => {
-      const p = pB([x * 180 / Math.PI, y * 180 / Math.PI]);
-      return p ? [(p[0] - translateB[0]) / scaleB, (p[1] - translateB[1]) / scaleB] : [0, 0];
-    });
-
-    return (t) => {
-      const proj = d3.geoProjection((x, y) => {
-          const a = rawA(x, y);
-          const b = rawB(x, y);
-          return [
-            a[0] * (1 - t) + b[0] * t,
-            a[1] * (1 - t) + b[1] * t,
-          ];
-        })
-        .scale(scaleA * (1 - t) + scaleB * t)
-        .translate([
-          translateA[0] * (1 - t) + translateB[0] * t,
-          translateA[1] * (1 - t) + translateB[1] * t,
-        ])
-        .precision(0.1);
-      return proj;
+  // Create a projection-like object that lerps every projected point between two projections.
+  // D3's geoPath calls projection.stream(), so we intercept at the stream level.
+  function lerpProjection(projFrom, projTo, t) {
+    // Point projection function (for markers/flight paths)
+    const project = (coords) => {
+      const a = projFrom(coords);
+      const b = projTo(coords);
+      if (!a || !b) return a || b;
+      return [
+        a[0] * (1 - t) + b[0] * t,
+        a[1] * (1 - t) + b[1] * t,
+      ];
     };
+
+    // Stream wrapper: intercepts projected coordinates and lerps them
+    project.stream = (output) => {
+      const streamA = projFrom.stream({
+        point(x, y) { this._ax = x; this._ay = y; },
+        lineStart() {},
+        lineEnd() {},
+        polygonStart() {},
+        polygonEnd() {},
+      });
+      const streamB = projTo.stream({
+        point(x, y) { this._bx = x; this._by = y; },
+        lineStart() {},
+        lineEnd() {},
+        polygonStart() {},
+        polygonEnd() {},
+      });
+
+      // We need both streams to process the same geo coordinates,
+      // so we create a pass-through that feeds both and lerps the output.
+      return {
+        point(lon, lat) {
+          const a = projFrom([lon, lat]);
+          const b = projTo([lon, lat]);
+          if (a && b) {
+            output.point(
+              a[0] * (1 - t) + b[0] * t,
+              a[1] * (1 - t) + b[1] * t
+            );
+          } else if (a) {
+            output.point(a[0], a[1]);
+          } else if (b) {
+            output.point(b[0], b[1]);
+          }
+        },
+        lineStart() { output.lineStart(); },
+        lineEnd() { output.lineEnd(); },
+        polygonStart() { output.polygonStart(); },
+        polygonEnd() { output.polygonEnd(); },
+        sphere() { output.sphere(); },
+      };
+    };
+
+    return project;
   }
 
   function render() {
@@ -292,21 +306,13 @@ async function init() {
     const projRed = fitProjection(PROJECTIONS[splitRed].fn, w, h);
     const pathRed = d3.geoPath(projRed, ctx);
 
-    // Blue projection: morph from red's projection to its own based on blendT
-    let projBlue, pathBlue;
-    if (blendT < 0.01) {
-      projBlue = projRed;
-      pathBlue = pathRed;
-    } else if (blendT > 0.99) {
-      projBlue = fitProjection(PROJECTIONS[splitBlue].fn, w, h);
-      pathBlue = d3.geoPath(projBlue, ctx);
-    } else {
-      const interp = interpolateProjection(
-        PROJECTIONS[splitRed].fn, PROJECTIONS[splitBlue].fn, w, h
-      );
-      projBlue = interp(blendT);
-      pathBlue = d3.geoPath(projBlue, ctx);
-    }
+    const projBlueSplit = fitProjection(PROJECTIONS[splitBlue].fn, w, h);
+
+    // Blended blue projection: lerps every point from red's shape to blue's shape
+    const projBlue = blendT < 0.01 ? projRed
+      : blendT > 0.99 ? projBlueSplit
+      : lerpProjection(projRed, projBlueSplit, blendT);
+    const pathBlue = d3.geoPath(projBlue, ctx);
 
     // Clear
     ctx.globalCompositeOperation = "source-over";
@@ -325,7 +331,7 @@ async function init() {
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
 
-    // Flight paths and markers
+    // Flight paths and markers use the blended blue projection
     renderFlightPaths(ctx, projRed, projBlue);
     renderMarkers(ctx, projRed, projBlue);
   }
