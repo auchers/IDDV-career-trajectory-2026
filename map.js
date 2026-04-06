@@ -178,16 +178,26 @@ async function loadWorldData() {
   };
 }
 
-function fitProjection(projectionFn, width, height) {
+const POLYHEDRAL_KEYS = new Set([
+  "polyhedralButterfly", "polyhedralCollignon", "polyhedralWaterman",
+]);
+
+function fitProjection(projectionFn, width, height, key) {
   const projection = projectionFn();
-  // Fit to a taller virtual canvas and shift upward so the southern hemisphere
-  // spikes extend below the visible wrapper and get clipped by overflow:hidden.
-  const overflowY = height * 0.35;
   const pad = 16;
-  projection.fitExtent(
-    [[pad, pad - overflowY], [width - pad, height - pad]],
-    { type: "Sphere" }
-  );
+  if (key && POLYHEDRAL_KEYS.has(key)) {
+    // Polyhedral projections have tall spikes — shift up to clip the bottom
+    const overflowY = height * 0.35;
+    projection.fitExtent(
+      [[pad, pad - overflowY], [width - pad, height - pad]],
+      { type: "Sphere" }
+    );
+  } else {
+    projection.fitExtent(
+      [[pad, pad], [width - pad, height - pad]],
+      { type: "Sphere" }
+    );
+  }
   return projection;
 }
 
@@ -252,10 +262,10 @@ async function init() {
     const w = width;
     const h = height;
 
-    const projRed = fitProjection(PROJECTIONS[splitRed].fn, w, h);
+    const projRed = fitProjection(PROJECTIONS[splitRed].fn, w, h, splitRed);
     const pathRed = d3.geoPath(projRed, ctx);
 
-    const projBlueSplit = fitProjection(PROJECTIONS[splitBlue].fn, w, h);
+    const projBlueSplit = fitProjection(PROJECTIONS[splitBlue].fn, w, h, splitBlue);
     const pathBlueSplit = d3.geoPath(projBlueSplit, ctx);
 
     // Clear
