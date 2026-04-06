@@ -80,43 +80,27 @@ function renderFlightPaths(ctx, projRed, projBlue) {
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Arrowhead at destination
-    const tip = points[points.length - 1];
-    const prev = points[points.length - 2];
-    const angle = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
-    const arrowLen = 12;
-    const arrowWidth = Math.PI / 6;
-
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(tip[0], tip[1]);
-    ctx.lineTo(
-      tip[0] - arrowLen * Math.cos(angle - arrowWidth),
-      tip[1] - arrowLen * Math.sin(angle - arrowWidth)
-    );
-    ctx.lineTo(
-      tip[0] - arrowLen * Math.cos(angle + arrowWidth),
-      tip[1] - arrowLen * Math.sin(angle + arrowWidth)
-    );
-    ctx.closePath();
-    // Black outline arrow
-    ctx.strokeStyle = "#444";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = "#fff";
-    ctx.fill();
   }
 
   ctx.restore();
 }
 
 // Label offsets [dx, dy] from center of circle, and text alignment
+// Pixel nudges applied to dot positions to separate overlapping cities
+const DOT_NUDGES = [
+  { nx: 0, ny: 0 },    // LA
+  { nx: 0, ny: 0 },    // Berkeley
+  { nx: 0, ny: 0 },    // Tel Aviv
+  { nx: -10, ny: 10 }, // Brooklyn — nudge down-left
+  { nx: 10, ny: -10 }, // Boston — nudge up-right
+];
+
 const LABEL_OFFSETS = [
   { dx: -14, dy: 18, align: "right" },   // LA — below-left
   { dx: -14, dy: -18, align: "right" },  // Berkeley — above-left
   { dx: 14, dy: -14, align: "left" },    // Tel Aviv — above-right
-  { dx: 18, dy: 28, align: "left" },     // Brooklyn — far below-right
-  { dx: -18, dy: -32, align: "right" },  // Boston — far above-left
+  { dx: -18, dy: 24, align: "right" },   // Brooklyn — below-left
+  { dx: 18, dy: -24, align: "left" },    // Boston — above-right
 ];
 
 const CITY_FONT = "bold 13px 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
@@ -128,7 +112,9 @@ function renderMarkers(ctx, projRed, projBlue) {
     const projection = i % 2 === 0 ? projRed : projBlue;
     const projected = projection([city.lon, city.lat]);
     if (!projected) return;
-    const [x, y] = projected;
+    const { nx, ny } = DOT_NUDGES[i];
+    const x = projected[0] + nx;
+    const y = projected[1] + ny;
     const { dx, dy, align } = LABEL_OFFSETS[i];
 
     // City name with white stroke for legibility
@@ -270,7 +256,7 @@ async function init() {
 
     // Clear
     ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#f0ede8";
     ctx.fillRect(0, 0, w, h);
 
     // Red projection (always the same)
