@@ -43,29 +43,105 @@ body {
   margin-bottom: 10px;
 }
 
-/* ── Projection documentation (replaces old controls) ── */
+/* ── Side Panel ──────────────────────────────── */
 
-.projection-doc {
+.panel-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1001;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.panel-toggle:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: -280px;
+  width: 280px;
+  height: 100vh;
+  background: #fff;
+  border-left: 1px solid #eee;
+  z-index: 1000;
+  transition: right 0.25s ease;
+  overflow-y: auto;
+  box-shadow: -2px 0 12px rgba(0,0,0,0.05);
+}
+
+.side-panel.open {
+  right: 0;
+}
+
+.side-panel-content {
+  padding: 56px 20px 24px;
+}
+
+.side-panel-heading {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.side-preset-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  gap: 4px;
+  margin-bottom: 16px;
 }
 
-.projection-doc.hidden {
-  display: none;
+.side-preset-row button {
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  background: #f2f2f2;
+  cursor: pointer;
+  font-weight: 400;
+  color: #555;
+  transition: all 0.15s;
+  text-align: left;
 }
 
-.projection-selectors {
+.side-preset-row button:hover {
+  background: #e5e5e5;
+  color: #333;
+}
+
+.side-preset-row button.active {
+  background: #444;
+  color: #fff;
+}
+
+.side-projection-selectors {
   display: flex;
-  gap: 20px;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
-.projection-field {
+.side-projection-field {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .projection-label {
@@ -84,48 +160,40 @@ body {
   color: #44c;
 }
 
-.projection-field select {
+.side-projection-field select {
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
   font-size: 12px;
-  padding: 3px 6px;
+  padding: 5px 8px;
   border: 1px solid #ddd;
-  border-radius: 2px;
+  border-radius: 3px;
   background: #fff;
   color: #333;
   cursor: pointer;
+  width: 100%;
 }
 
-.projection-field select:hover {
+.side-projection-field select:hover {
   border-color: #999;
 }
 
-.preset-row {
-  display: flex;
-  gap: 8px;
+.side-panel-qr {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  text-align: center;
 }
 
-.preset-row button {
-  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-  font-size: 11px;
-  padding: 4px 12px;
-  border: none;
-  border-radius: 2px;
-  background: #f2f2f2;
-  cursor: pointer;
-  font-weight: 400;
-  color: #777;
-  transition: all 0.15s;
-  text-transform: none;
+.qr-image {
+  display: block;
+  margin: 0 auto 8px;
+  width: 120px;
+  height: 120px;
 }
 
-.preset-row button:hover {
-  background: #e5e5e5;
-  color: #333;
-}
-
-.preset-row button.active {
-  background: #000;
-  color: #fff;
+.qr-url {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 9px;
+  color: #999;
+  letter-spacing: 0.2px;
 }
 
 /* ── Map ─────────────────────────────────────── */
@@ -149,7 +217,8 @@ body {
 /* ── Print ────────────────────────────────────── */
 
 @media print {
-  .projection-doc {
+  .side-panel,
+  .panel-toggle {
     display: none !important;
   }
 

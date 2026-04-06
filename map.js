@@ -296,65 +296,69 @@ async function init() {
     if (blueSelect) blueSelect.value = config.blue;
   });
 
-  // Controls
+  // Side panel toggle
+  const panel = document.getElementById("side-panel");
+  const panelToggle = document.getElementById("panel-toggle");
+  panelToggle.addEventListener("click", () => {
+    panel.classList.toggle("open");
+  });
+
+  // Open panel if ?controls=true
   if (config.showControls) {
-    document.getElementById("projection-doc").classList.remove("hidden");
-
-    const redSelect = document.getElementById("red-select");
-    const blueSelect = document.getElementById("blue-select");
-
-    // Populate dropdowns
-    Object.entries(PROJECTIONS).forEach(([key, { name }]) => {
-      redSelect.add(new Option(name, key));
-      blueSelect.add(new Option(name, key));
-    });
-    redSelect.value = config.red;
-    blueSelect.value = config.blue;
-
-    const onProjectionChange = () => {
-      config.red = redSelect.value;
-      config.blue = blueSelect.value;
-      render();
-    };
-    redSelect.addEventListener("change", onProjectionChange);
-    blueSelect.addEventListener("change", onProjectionChange);
-
-    // Preset buttons
-    const presetRow = document.getElementById("preset-buttons");
-    const presetButtons = [];
-
-    const updateActivePreset = () => {
-      presetButtons.forEach(({ btn, preset }) => {
-        const isActive = config.red === preset.red && config.blue === preset.blue;
-        btn.classList.toggle("active", isActive);
-      });
-    };
-
-    Object.entries(PRESETS).forEach(([key, preset]) => {
-      const btn = document.createElement("button");
-      btn.textContent = preset.name;
-      btn.addEventListener("click", () => {
-        config.red = preset.red;
-        config.blue = preset.blue;
-        redSelect.value = config.red;
-        blueSelect.value = config.blue;
-        render();
-        updateActivePreset();
-      });
-      presetRow.appendChild(btn);
-      presetButtons.push({ btn, preset });
-    });
-
-    // Also clear active state when dropdowns change manually
-    redSelect.addEventListener("change", updateActivePreset);
-    blueSelect.addEventListener("change", updateActivePreset);
-
-    // Set initial active state
-    updateActivePreset();
-
-    document.querySelector('.projection-label.red').style.color = currentTheme.projA;
-    document.querySelector('.projection-label.blue').style.color = currentTheme.projB;
+    panel.classList.add("open");
   }
+
+  // Controls (always populated, live in side panel)
+  const redSelect = document.getElementById("red-select");
+  const blueSelect = document.getElementById("blue-select");
+
+  Object.entries(PROJECTIONS).forEach(([key, { name }]) => {
+    redSelect.add(new Option(name, key));
+    blueSelect.add(new Option(name, key));
+  });
+  redSelect.value = config.red;
+  blueSelect.value = config.blue;
+
+  const onProjectionChange = () => {
+    config.red = redSelect.value;
+    config.blue = blueSelect.value;
+    unified = false;
+    render();
+    updateActivePreset();
+  };
+  redSelect.addEventListener("change", onProjectionChange);
+  blueSelect.addEventListener("change", onProjectionChange);
+
+  const presetRow = document.getElementById("preset-buttons");
+  const presetButtons = [];
+
+  const updateActivePreset = () => {
+    presetButtons.forEach(({ btn, preset }) => {
+      const isActive = config.red === preset.red && config.blue === preset.blue;
+      btn.classList.toggle("active", isActive);
+    });
+  };
+
+  Object.entries(PRESETS).forEach(([key, preset]) => {
+    const btn = document.createElement("button");
+    btn.textContent = preset.name;
+    btn.addEventListener("click", () => {
+      config.red = preset.red;
+      config.blue = preset.blue;
+      redSelect.value = config.red;
+      blueSelect.value = config.blue;
+      unified = false;
+      render();
+      updateActivePreset();
+    });
+    presetRow.appendChild(btn);
+    presetButtons.push({ btn, preset });
+  });
+
+  updateActivePreset();
+
+  document.querySelector('.projection-label.red').style.color = currentTheme.projA;
+  document.querySelector('.projection-label.blue').style.color = currentTheme.projB;
 
   // Resize handler
   window.addEventListener("resize", () => {
