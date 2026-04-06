@@ -262,6 +262,32 @@ async function init() {
   // Expose render + config for controls (Task 5)
   window._map = { render, config, width, height, worldData, ctx };
 
+  // Spacebar toggle: unified (both projections identical) ↔ split (actual pair)
+  let unified = true;
+  const splitRed = config.red;
+  const splitBlue = config.blue;
+  // Start unified: both projections use red's value
+  config.blue = config.red;
+  render();
+
+  window.addEventListener("keydown", (e) => {
+    if (e.code !== "Space" || e.target.tagName === "SELECT") return;
+    e.preventDefault();
+    unified = !unified;
+    if (unified) {
+      config.blue = config.red;
+    } else {
+      config.red = splitRed;
+      config.blue = splitBlue;
+    }
+    render();
+    // Sync dropdowns if controls are visible
+    const redSelect = document.getElementById("red-select");
+    const blueSelect = document.getElementById("blue-select");
+    if (redSelect) redSelect.value = config.red;
+    if (blueSelect) blueSelect.value = config.blue;
+  });
+
   // Controls
   if (config.showControls) {
     document.getElementById("projection-doc").classList.remove("hidden");
