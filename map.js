@@ -2,6 +2,23 @@
 
 const WORLD_DATA_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
+const THEMES = {
+  orchidMint: {
+    projA: '#C07090',
+    projB: '#72BC98',
+  },
+  roseSage: {
+    projA: '#D4878F',
+    projB: '#8BAF9E',
+  },
+  classic: {
+    projA: '#f00',
+    projB: '#00f',
+  },
+};
+
+let currentTheme = THEMES.orchidMint;
+
 const CITIES = [
   { name: "Los Angeles", lat: 34.05, lon: -118.24 },
   { name: "Berkeley", lat: 37.87, lon: -122.27 },
@@ -51,7 +68,7 @@ function renderFlightPaths(ctx, projRed, projBlue) {
     // Black solid outline behind white dashes
     ctx.setLineDash([]);
     drawArc();
-    ctx.strokeStyle = "#000";
+    ctx.strokeStyle = "#444";
     ctx.lineWidth = 5;
     ctx.lineCap = "round";
     ctx.stroke();
@@ -63,135 +80,61 @@ function renderFlightPaths(ctx, projRed, projBlue) {
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Arrowhead at destination
-    const tip = points[points.length - 1];
-    const prev = points[points.length - 2];
-    const angle = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
-    const arrowLen = 12;
-    const arrowWidth = Math.PI / 6;
-
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(tip[0], tip[1]);
-    ctx.lineTo(
-      tip[0] - arrowLen * Math.cos(angle - arrowWidth),
-      tip[1] - arrowLen * Math.sin(angle - arrowWidth)
-    );
-    ctx.lineTo(
-      tip[0] - arrowLen * Math.cos(angle + arrowWidth),
-      tip[1] - arrowLen * Math.sin(angle + arrowWidth)
-    );
-    ctx.closePath();
-    // Black outline arrow
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = "#fff";
-    ctx.fill();
   }
 
   ctx.restore();
 }
 
-function formatCoord(lat, lon) {
-  const latDir = lat >= 0 ? "N" : "S";
-  const lonDir = lon >= 0 ? "E" : "W";
-  return `${Math.abs(lat).toFixed(2)}\u00B0${latDir}, ${Math.abs(lon).toFixed(2)}\u00B0${lonDir}`;
-}
-
 // Label offsets [dx, dy] from center of circle, and text alignment
-const LABEL_OFFSETS = [
-  { dx: -16, dy: 20, align: "right" },   // LA — below-left
-  { dx: -16, dy: -44, align: "right" },   // Berkeley — above-left
-  { dx: 16, dy: -16, align: "left" },     // Tel Aviv — above-right
-  { dx: 16, dy: 20, align: "left" },      // Brooklyn — below-right
-  { dx: 16, dy: -44, align: "left" },     // Boston — above-right
-];
-
-// Pixel nudges to separate overlapping dot pairs (applied to projected coords)
-// Tune these once a final projection is chosen
+// Pixel nudges applied to dot positions to separate overlapping cities
 const DOT_NUDGES = [
-  { nx: 0, ny: 0 },   // LA
-  { nx: 0, ny: 0 },   // Berkeley
-  { nx: 0, ny: 0 },   // Tel Aviv
-  { nx: 0, ny: 0 },   // Brooklyn
-  { nx: 0, ny: 0 },   // Boston
+  { nx: 0, ny: 0 },    // LA
+  { nx: 0, ny: 0 },    // Berkeley
+  { nx: 0, ny: 0 },    // Tel Aviv
+  { nx: -5, ny: 5 },  // Brooklyn — slight nudge down-left
+  { nx: 5, ny: -5 },  // Boston — slight nudge up-right
 ];
 
-const CITY_FONT = "bold 13px 'Helvetica Neue', Arial, sans-serif";
-const COORD_FONT = "10px 'Courier New', 'Courier', monospace";
+const LABEL_OFFSETS = [
+  { dx: -14, dy: 18, align: "right" },   // LA — below-left
+  { dx: -14, dy: -18, align: "right" },  // Berkeley — above-left
+  { dx: 14, dy: -14, align: "left" },    // Tel Aviv — above-right
+  { dx: -18, dy: 24, align: "right" },   // Brooklyn — below-left
+  { dx: 18, dy: -24, align: "left" },    // Boston — above-right
+];
 
-function measureLabel(ctx, city, coordStr) {
-  ctx.font = CITY_FONT;
-  const nameW = ctx.measureText(city.name).width;
-  ctx.font = COORD_FONT;
-  const coordW = ctx.measureText(coordStr).width;
-  return { width: Math.max(nameW, coordW), nameH: 15, coordH: 13 };
-}
+const CITY_FONT = "bold 13px 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
 
 function renderMarkers(ctx, projRed, projBlue) {
   const radius = 9;
-  const pad = 5;
 
   CITIES.forEach((city, i) => {
-    // Alternate: even cities use red projection, odd use blue
     const projection = i % 2 === 0 ? projRed : projBlue;
     const projected = projection([city.lon, city.lat]);
     if (!projected) return;
-    const [px, py] = projected;
     const { nx, ny } = DOT_NUDGES[i];
-    const x = px + nx;
-    const y = py + ny;
+    const x = projected[0] + nx;
+    const y = projected[1] + ny;
     const { dx, dy, align } = LABEL_OFFSETS[i];
-    const coordStr = formatCoord(city.lat, city.lon);
-    const m = measureLabel(ctx, city, coordStr);
-    const totalH = m.nameH + m.coordH;
 
-    // Label anchor point
+    // City name with white stroke for legibility
     const labelX = x + dx;
     const labelY = y + dy;
-
-    // Compute backing rect position
-    const rectX = align === "left" ? labelX - pad : labelX - m.width - pad;
-    const rectY = labelY - pad;
-    const rectW = m.width + pad * 2;
-    const rectH = totalH + pad * 2;
-
-    // Draw connector line from dot to label
-    ctx.save();
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(labelX, labelY + totalH / 2);
-    ctx.stroke();
-    ctx.restore();
-
-    // White backing panel with black border
-    ctx.save();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(rectX, rectY, rectW, rectH, 3);
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-
-    // City name
     ctx.font = CITY_FONT;
     ctx.textAlign = align;
-    ctx.textBaseline = "top";
-    ctx.fillStyle = "#000";
+    ctx.textBaseline = "middle";
+
+    // White outline stroke
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
+    ctx.strokeText(city.name, labelX, labelY);
+
+    // Black fill
+    ctx.fillStyle = "#444";
     ctx.fillText(city.name, labelX, labelY);
 
-    // Lat/lon coordinates
-    ctx.font = COORD_FONT;
-    ctx.fillStyle = "#000";
-    ctx.fillText(coordStr, labelX, labelY + m.nameH);
-
-    // White halo ring (Warhol style)
+    // White halo ring
     ctx.beginPath();
     ctx.arc(x, y, radius + 2, 0, 2 * Math.PI);
     ctx.fillStyle = "#fff";
@@ -200,12 +143,12 @@ function renderMarkers(ctx, projRed, projBlue) {
     // Black filled circle
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#444";
     ctx.fill();
 
     // White number centered in circle
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 11px 'Helvetica Neue', Arial, sans-serif";
+    ctx.font = "bold 11px 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(i + 1), x, y);
@@ -221,13 +164,30 @@ async function loadWorldData() {
   };
 }
 
-function fitProjection(projectionFn, width, height) {
+const POLYHEDRAL_KEYS = new Set([
+  "polyhedralButterfly", "polyhedralCollignon", "polyhedralWaterman",
+]);
+
+function fitProjection(projectionFn, width, height, key) {
   const projection = projectionFn();
-  projection.fitSize([width, height], { type: "Sphere" });
+  const pad = 16;
+  if (key && POLYHEDRAL_KEYS.has(key)) {
+    // Polyhedral projections have tall spikes — shift up to clip the bottom
+    const overflowY = height * 0.35;
+    projection.fitExtent(
+      [[pad, pad - overflowY], [width - pad, height - pad]],
+      { type: "Sphere" }
+    );
+  } else {
+    projection.fitExtent(
+      [[pad, pad], [width - pad, height - pad]],
+      { type: "Sphere" }
+    );
+  }
   return projection;
 }
 
-function renderProjection(ctx, path, land, graticule, outline, color) {
+function renderProjection(ctx, path, land, graticule, color) {
   // Land
   ctx.beginPath();
   path(land);
@@ -242,138 +202,210 @@ function renderProjection(ctx, path, land, graticule, outline, color) {
   ctx.globalAlpha = 0.3;
   ctx.stroke();
   ctx.globalAlpha = 1.0;
-
-  // Outline (sphere border)
-  ctx.beginPath();
-  path(outline);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
 }
 
 async function init() {
+  const wrap = document.getElementById("map-wrap");
   const canvas = document.getElementById("map-canvas");
   const ctx = canvas.getContext("2d");
   const config = parseParams();
 
-  // Set canvas resolution to match display size
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
+  // Size canvas to match wrapper (wrapper is flex-sized, canvas is absolute-positioned)
+  function syncCanvasSize() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    return { w, h };
+  }
 
-  let width = rect.width;
-  let height = rect.height;
+  let { w: width, h: height } = syncCanvasSize();
 
   const worldData = await loadWorldData();
   const graticule = d3.geoGraticule().precision(2.5)();
-  const outline = { type: "Sphere" };
+
+  // Animation state for unified ↔ split transition
+  let blendT = 0; // 0 = unified (both same), 1 = fully split
+  let unified = true;
+  let splitRed = config.red;
+  let splitBlue = config.blue;
+  let animationId = null;
+
+  // Lerp a single projected point between two projections (for markers/flight paths)
+  function lerpPoint(projA, projB, coords, t) {
+    const a = projA(coords);
+    const b = projB(coords);
+    if (!a || !b) return a || b;
+    return [a[0] * (1 - t) + b[0] * t, a[1] * (1 - t) + b[1] * t];
+  }
 
   function render() {
     const w = width;
     const h = height;
 
-    const projRed = fitProjection(PROJECTIONS[config.red].fn, w, h);
+    const projRed = fitProjection(PROJECTIONS[splitRed].fn, w, h, splitRed);
     const pathRed = d3.geoPath(projRed, ctx);
 
-    const projBlue = fitProjection(PROJECTIONS[config.blue].fn, w, h);
-    const pathBlue = d3.geoPath(projBlue, ctx);
+    const projBlueSplit = fitProjection(PROJECTIONS[splitBlue].fn, w, h, splitBlue);
+    const pathBlueSplit = d3.geoPath(projBlueSplit, ctx);
 
     // Clear
     ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#f0ede8";
     ctx.fillRect(0, 0, w, h);
 
-    // Red projection
-    renderProjection(ctx, pathRed, worldData.land, graticule, outline, "#f00");
+    // Red projection (always the same)
+    renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projA);
 
     // Multiply blend
     ctx.globalCompositeOperation = "multiply";
 
-    // Blue projection
-    renderProjection(ctx, pathBlue, worldData.land, graticule, outline, "#00f");
+    // Blue land: crossfade between unified (red's path) and split (blue's path)
+    if (blendT < 0.01) {
+      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
+    } else if (blendT > 0.99) {
+      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
+    } else {
+      ctx.globalAlpha = 1 - blendT;
+      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
+      ctx.globalAlpha = blendT;
+      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
+      ctx.globalAlpha = 1.0;
+    }
 
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
 
-    // Flight paths and markers (alternate between projections)
-    renderFlightPaths(ctx, projRed, projBlue);
-    renderMarkers(ctx, projRed, projBlue);
+    // Flight paths and markers: smoothly interpolate positions
+    const projBlueForPaths = (coords) => lerpPoint(projRed, projBlueSplit, coords, blendT);
+    renderFlightPaths(ctx, projRed, projBlueForPaths);
+    renderMarkers(ctx, projRed, projBlueForPaths);
   }
 
   render();
 
-  // Expose render + config for controls (Task 5)
+  // Expose render + config for controls
   window._map = { render, config, width, height, worldData, ctx };
 
-  // Controls
-  if (config.showControls) {
-    document.getElementById("projection-doc").classList.remove("hidden");
+  function animateTo(targetT) {
+    if (animationId) cancelAnimationFrame(animationId);
+    const startT = blendT;
+    const startTime = performance.now();
+    const duration = 800; // ms
 
-    const redSelect = document.getElementById("red-select");
-    const blueSelect = document.getElementById("blue-select");
-
-    // Populate dropdowns
-    Object.entries(PROJECTIONS).forEach(([key, { name }]) => {
-      redSelect.add(new Option(name, key));
-      blueSelect.add(new Option(name, key));
-    });
-    redSelect.value = config.red;
-    blueSelect.value = config.blue;
-
-    const onProjectionChange = () => {
-      config.red = redSelect.value;
-      config.blue = blueSelect.value;
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease in-out cubic
+      const ease = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      blendT = startT + (targetT - startT) * ease;
       render();
-    };
-    redSelect.addEventListener("change", onProjectionChange);
-    blueSelect.addEventListener("change", onProjectionChange);
-
-    // Preset buttons
-    const presetRow = document.getElementById("preset-buttons");
-    const presetButtons = [];
-
-    const updateActivePreset = () => {
-      presetButtons.forEach(({ btn, preset }) => {
-        const isActive = config.red === preset.red && config.blue === preset.blue;
-        btn.classList.toggle("active", isActive);
-      });
-    };
-
-    Object.entries(PRESETS).forEach(([key, preset]) => {
-      const btn = document.createElement("button");
-      btn.textContent = preset.name;
-      btn.addEventListener("click", () => {
-        config.red = preset.red;
-        config.blue = preset.blue;
-        redSelect.value = config.red;
-        blueSelect.value = config.blue;
-        render();
-        updateActivePreset();
-      });
-      presetRow.appendChild(btn);
-      presetButtons.push({ btn, preset });
-    });
-
-    // Also clear active state when dropdowns change manually
-    redSelect.addEventListener("change", updateActivePreset);
-    blueSelect.addEventListener("change", updateActivePreset);
-
-    // Set initial active state
-    updateActivePreset();
+      if (progress < 1) {
+        animationId = requestAnimationFrame(tick);
+      } else {
+        animationId = null;
+        blendT = targetT;
+        // Update config to reflect final state (for dropdown sync)
+        config.red = splitRed;
+        config.blue = targetT > 0.5 ? splitBlue : splitRed;
+        const rs = document.getElementById("red-select");
+        const bs = document.getElementById("blue-select");
+        if (rs) rs.value = config.red;
+        if (bs) bs.value = config.blue;
+      }
+    }
+    animationId = requestAnimationFrame(tick);
   }
+
+  window.addEventListener("keydown", (e) => {
+    if (e.code !== "Space" || e.target.tagName === "SELECT") return;
+    e.preventDefault();
+    unified = !unified;
+    animateTo(unified ? 0 : 1);
+  });
+
+  // Side panel toggle
+  const panel = document.getElementById("side-panel");
+  const panelToggle = document.getElementById("panel-toggle");
+  panelToggle.addEventListener("click", () => {
+    panel.classList.toggle("open");
+  });
+
+  // Open panel if ?controls=true
+  if (config.showControls) {
+    panel.classList.add("open");
+  }
+
+  // Controls (always populated, live in side panel)
+  const redSelect = document.getElementById("red-select");
+  const blueSelect = document.getElementById("blue-select");
+
+  Object.entries(PROJECTIONS).forEach(([key, { name }]) => {
+    redSelect.add(new Option(name, key));
+    blueSelect.add(new Option(name, key));
+  });
+  redSelect.value = config.red;
+  blueSelect.value = config.blue;
+
+  const onProjectionChange = () => {
+    splitRed = redSelect.value;
+    splitBlue = blueSelect.value;
+    config.red = splitRed;
+    config.blue = splitBlue;
+    unified = false;
+    blendT = 1;
+    render();
+    updateActivePreset();
+  };
+  redSelect.addEventListener("change", onProjectionChange);
+  blueSelect.addEventListener("change", onProjectionChange);
+
+  const presetRow = document.getElementById("preset-buttons");
+  const presetButtons = [];
+
+  const updateActivePreset = () => {
+    presetButtons.forEach(({ btn, preset }) => {
+      const isActive = config.red === preset.red && config.blue === preset.blue;
+      btn.classList.toggle("active", isActive);
+    });
+  };
+
+  Object.entries(PRESETS).forEach(([key, preset]) => {
+    const btn = document.createElement("button");
+    btn.textContent = preset.name;
+    btn.addEventListener("click", () => {
+      splitRed = preset.red;
+      splitBlue = preset.blue;
+      config.red = splitRed;
+      config.blue = splitBlue;
+      redSelect.value = splitRed;
+      blueSelect.value = splitBlue;
+      unified = false;
+      blendT = 1;
+      render();
+      updateActivePreset();
+    });
+    presetRow.appendChild(btn);
+    presetButtons.push({ btn, preset });
+  });
+
+  updateActivePreset();
+
+  document.querySelector('.projection-label.red').style.color = currentTheme.projA;
+  document.querySelector('.projection-label.blue').style.color = currentTheme.projB;
 
   // Resize handler
   window.addEventListener("resize", () => {
-    const r = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = r.width * dpr;
-    canvas.height = r.height * dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-    width = r.width;
-    height = r.height;
+    const size = syncCanvasSize();
+    width = size.w;
+    height = size.h;
     render();
   });
 }

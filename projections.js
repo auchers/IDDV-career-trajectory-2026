@@ -64,12 +64,12 @@ function parseParams() {
   }
 
   // Check for explicit red/blue params
-  const red = params.get("red") || PRESETS.compromise.red;
-  const blue = params.get("blue") || PRESETS.compromise.blue;
+  const red = params.get("red") || PRESETS.butterfly.red;
+  const blue = params.get("blue") || PRESETS.butterfly.blue;
 
   return {
-    red: PROJECTIONS[red] ? red : PRESETS.compromise.red,
-    blue: PROJECTIONS[blue] ? blue : PRESETS.compromise.blue,
+    red: PROJECTIONS[red] ? red : PRESETS.butterfly.red,
+    blue: PROJECTIONS[blue] ? blue : PRESETS.butterfly.blue,
     showControls,
   };
 }

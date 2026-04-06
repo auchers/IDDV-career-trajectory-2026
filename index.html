@@ -11,23 +11,50 @@
 </head>
 <body>
   <header id="card-header">
-    <h1>Every projection is a compromise</h1>
-    <p class="subtitle">Five cities, two projections, one career. The black is where both views agree — the shared ground truth. The red and blue fringe is the ambiguity that remains.</p>
-    <div id="projection-doc" class="projection-doc hidden">
-      <div class="preset-row" id="preset-buttons"></div>
-      <div class="projection-selectors">
-        <div class="projection-field">
+    <h1>No two paths look the same</h1>
+    <p class="subtitle">A career doesn't unfold in a straight line. It dissolves and re-forms.</p>
+  </header>
+
+  <!-- Side panel for controls -->
+  <button id="panel-toggle" class="panel-toggle" aria-label="Toggle controls">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect y="3" width="20" height="2" rx="1" fill="currentColor"/>
+      <rect y="9" width="20" height="2" rx="1" fill="currentColor"/>
+      <rect y="15" width="20" height="2" rx="1" fill="currentColor"/>
+    </svg>
+  </button>
+  <aside id="side-panel" class="side-panel">
+    <div class="side-panel-content">
+      <h3 class="side-panel-heading">Projections</h3>
+      <div id="preset-buttons" class="side-preset-row"></div>
+      <div class="side-projection-selectors">
+        <div class="side-projection-field">
           <span class="projection-label red">Projection A</span>
           <select id="red-select"></select>
         </div>
-        <div class="projection-field">
+        <div class="side-projection-field">
           <span class="projection-label blue">Projection B</span>
           <select id="blue-select"></select>
         </div>
       </div>
+      <div class="side-panel-section">
+        <h3 class="side-panel-heading">What I've learned</h3>
+        <ul class="talking-points">
+          <li>No two paths will look the same. Trust yourself and your journey.</li>
+          <li>Growth isn't always linear. Don't fear the disintegration — the "goo stage" is where transformation happens.</li>
+          <li>In a world where people can more easily create their own data products, being able to craft stories that ground and create alignment become all the more important.</li>
+        </ul>
+      </div>
+      <div class="side-panel-qr">
+        <h3 class="side-panel-heading">Try it yourself</h3>
+        <img src="qr.svg" alt="QR code" class="qr-image">
+        <p class="qr-url">projects.aucherserr.com</p>
+      </div>
     </div>
-  </header>
-  <canvas id="map-canvas"></canvas>
+  </aside>
+  <div id="map-wrap">
+    <canvas id="map-canvas"></canvas>
+  </div>
 
   <div id="timeline">
     <div class="timeline-axis" id="timeline-axis"></div>

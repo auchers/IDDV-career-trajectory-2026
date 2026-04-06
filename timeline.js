@@ -63,23 +63,15 @@ function renderTracks() {
 
     const trackEvents = EVENTS.filter(e => e.track === trackName);
 
-    let narrowCount = 0;
     trackEvents.forEach(event => {
       if (event.end !== undefined) {
-        // Duration bar
         const endYear = event.end === null ? TIMELINE_END : event.end;
         const leftPct = yearToPercent(event.start);
         const widthPct = yearToPercent(endYear) - leftPct;
-        const isNarrow = widthPct < 15;
 
         const bar = document.createElement('div');
         bar.className = 'timeline-bar';
         if (event.end === null) bar.classList.add('ongoing');
-        if (isNarrow) {
-          bar.classList.add('narrow');
-          if (narrowCount % 2 === 1) bar.classList.add('label-below');
-          narrowCount++;
-        }
         bar.style.left = `${leftPct}%`;
         bar.style.width = `${widthPct}%`;
 
@@ -90,7 +82,6 @@ function renderTracks() {
 
         row.appendChild(bar);
       } else {
-        // Point event
         const point = document.createElement('div');
         point.className = 'timeline-point';
         point.style.left = `${yearToPercent(event.start)}%`;

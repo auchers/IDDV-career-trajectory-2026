@@ -5,12 +5,13 @@
 }
 
 body {
-  background: #fff;
+  background: #f0ede8;
   font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ── Header ──────────────────────────────────── */
@@ -19,6 +20,7 @@ body {
   width: 100vw;
   max-width: 1600px;
   padding: 20px 40px 12px;
+  flex-shrink: 0;
 }
 
 #card-header h1 {
@@ -27,7 +29,7 @@ body {
   font-weight: 400;
   line-height: 1.2;
   letter-spacing: -0.3px;
-  color: #000;
+  color: #444;
   margin-bottom: 4px;
 }
 
@@ -41,29 +43,105 @@ body {
   margin-bottom: 10px;
 }
 
-/* ── Projection documentation (replaces old controls) ── */
+/* ── Side Panel ──────────────────────────────── */
 
-.projection-doc {
+.panel-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1001;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.panel-toggle:hover {
+  background: #f0f0f0;
+  color: #444;
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: -280px;
+  width: 280px;
+  height: 100vh;
+  background: #f0ede8;
+  border-left: 1px solid #eee;
+  z-index: 1000;
+  transition: right 0.25s ease;
+  overflow-y: auto;
+  box-shadow: -2px 0 12px rgba(0,0,0,0.05);
+}
+
+.side-panel.open {
+  right: 0;
+}
+
+.side-panel-content {
+  padding: 56px 20px 24px;
+}
+
+.side-panel-heading {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.side-preset-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  gap: 4px;
+  margin-bottom: 16px;
 }
 
-.projection-doc.hidden {
-  display: none;
+.side-preset-row button {
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  background: #f2f2f2;
+  cursor: pointer;
+  font-weight: 400;
+  color: #555;
+  transition: all 0.15s;
+  text-align: left;
 }
 
-.projection-selectors {
+.side-preset-row button:hover {
+  background: #e5e5e5;
+  color: #333;
+}
+
+.side-preset-row button.active {
+  background: #444;
+  color: #fff;
+}
+
+.side-projection-selectors {
   display: flex;
-  gap: 20px;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
-.projection-field {
+.side-projection-field {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .projection-label {
@@ -82,67 +160,93 @@ body {
   color: #44c;
 }
 
-.projection-field select {
+.side-projection-field select {
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
   font-size: 12px;
-  padding: 3px 6px;
+  padding: 5px 8px;
   border: 1px solid #ddd;
-  border-radius: 2px;
+  border-radius: 3px;
   background: #fff;
   color: #333;
   cursor: pointer;
+  width: 100%;
 }
 
-.projection-field select:hover {
+.side-projection-field select:hover {
   border-color: #999;
 }
 
-.preset-row {
+.side-panel-qr {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  text-align: center;
+}
+
+.qr-image {
+  display: block;
+  margin: 0 auto 8px;
+  width: 120px;
+  height: 120px;
+}
+
+.qr-url {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 9px;
+  color: #999;
+  letter-spacing: 0.2px;
+}
+
+.side-panel-section {
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+  margin-bottom: 16px;
+}
+
+.talking-points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.preset-row button {
+.talking-points li {
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-  font-size: 11px;
-  padding: 4px 12px;
-  border: none;
-  border-radius: 2px;
-  background: #f2f2f2;
-  cursor: pointer;
-  font-weight: 400;
-  color: #777;
-  transition: all 0.15s;
-  text-transform: none;
-}
-
-.preset-row button:hover {
-  background: #e5e5e5;
-  color: #333;
-}
-
-.preset-row button.active {
-  background: #000;
-  color: #fff;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #555;
+  padding-left: 12px;
+  border-left: 2px solid #ddd;
 }
 
 /* ── Map ─────────────────────────────────────── */
 
+#map-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1600px;
+  position: relative;
+  overflow: hidden;
+}
+
 #map-canvas {
   display: block;
-  width: 100vw;
-  max-width: 1600px;
-  aspect-ratio: 16 / 9;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* ── Print ────────────────────────────────────── */
 
 @media print {
-  .projection-doc {
+  .side-panel,
+  .panel-toggle {
     display: none !important;
   }
 
-  #map-canvas {
+  #map-wrap {
     width: 100%;
     max-width: none;
   }
@@ -156,19 +260,20 @@ body {
 /* ── Timeline ─────────────────────────────────── */
 
 #timeline {
-  width: 100vw;
+  width: 100%;
   max-width: 1600px;
   position: relative;
-  padding: 16px 40px 32px;
+  padding: 12px 40px 36px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .timeline-axis {
   position: relative;
-  height: 24px;
+  height: 20px;
   margin-left: 56px;
   margin-right: 8px;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #ddd;
 }
 
 .timeline-axis .tick {
@@ -178,7 +283,7 @@ body {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 9px;
   font-weight: 400;
-  color: #999;
+  color: #888;
   letter-spacing: 0;
   line-height: 1;
   padding-bottom: 5px;
@@ -191,7 +296,7 @@ body {
   left: 50%;
   width: 1px;
   height: 3px;
-  background: #ccc;
+  background: #ddd;
 }
 
 .timeline-tracks {
@@ -202,8 +307,8 @@ body {
 
 .timeline-track {
   position: relative;
-  height: 32px;
-  margin-top: 6px;
+  height: 26px;
+  margin-top: 4px;
 }
 
 .timeline-track-label {
@@ -218,80 +323,86 @@ body {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #555;
+  color: #999;
 }
 
 .timeline-bar {
   position: absolute;
-  top: 6px;
-  height: 18px;
-  background: #000;
-  outline: 2px solid #fff;
+  top: 50%;
+  height: 1.5px;
+  background: #444;
   display: flex;
   align-items: center;
-  padding: 0 5px;
   overflow: visible;
   white-space: nowrap;
-  border-radius: 1px;
+}
+
+.timeline-bar::before,
+.timeline-bar::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  width: 1.5px;
+  height: 9px;
+  background: #444;
+}
+
+.timeline-bar::before {
+  left: 0;
+}
+
+.timeline-bar::after {
+  right: 0;
+}
+
+.timeline-bar.ongoing::after {
+  display: none;
 }
 
 .timeline-bar .bar-label {
-  color: #fff;
+  color: #333;
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.3px;
   line-height: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.timeline-bar.narrow .bar-label {
-  color: #555;
   position: absolute;
-  top: -13px;
-  left: 0;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
   overflow: visible;
-}
-
-.timeline-bar.narrow.label-below .bar-label {
-  top: auto;
-  bottom: -13px;
-}
-
-.timeline-bar.ongoing {
-  background: #000;
+  white-space: nowrap;
 }
 
 .timeline-point {
   position: absolute;
-  top: 12px;
-  width: 6px;
-  height: 6px;
-  background: #000;
-  border-radius: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  background: #444;
+  border-radius: 0;
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .timeline-point .point-label {
   position: absolute;
   bottom: 12px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(-45deg);
   white-space: nowrap;
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
-  color: #555;
+  color: #333;
   letter-spacing: 0.3px;
 }
 
 .city-line {
   position: absolute;
-  top: -8px;
-  bottom: 0;
+  top: 0;
+  bottom: -8px;
   width: 1px;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.08);
   transform: translateX(-50%);
   pointer-events: none;
   z-index: 1;
@@ -299,12 +410,12 @@ body {
 
 .city-marker {
   position: absolute;
-  top: -20px;
+  bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
   width: 16px;
   height: 16px;
-  background: #000;
+  background: #444;
   border-radius: 50%;
   display: flex;
   align-items: center;
