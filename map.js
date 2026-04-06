@@ -240,21 +240,63 @@ async function init() {
   let splitBlue = config.blue;
   let animationId = null;
 
-  // Create a blended projection that lerps between two projections
-  function blendedProjection(projA, projB, t) {
-    const blend = (coords) => {
-      const a = projA(coords);
-      const b = projB(coords);
+  // Create a projection-like object that lerps every projected point between two projections.
+  // D3's geoPath calls projection.stream(), so we intercept at the stream level.
+  function lerpProjection(projFrom, projTo, t) {
+    // Point projection function (for markers/flight paths)
+    const project = (coords) => {
+      const a = projFrom(coords);
+      const b = projTo(coords);
       if (!a || !b) return a || b;
       return [
         a[0] * (1 - t) + b[0] * t,
         a[1] * (1 - t) + b[1] * t,
       ];
     };
-    // d3.geoPath needs a .stream() method — wrap via d3.geoProjection
-    // But for canvas rendering, we need a proper projection with stream.
-    // Simpler: use projA for the path (land/graticule), and blend for markers/flights.
-    return blend;
+
+    // Stream wrapper: intercepts projected coordinates and lerps them
+    project.stream = (output) => {
+      const streamA = projFrom.stream({
+        point(x, y) { this._ax = x; this._ay = y; },
+        lineStart() {},
+        lineEnd() {},
+        polygonStart() {},
+        polygonEnd() {},
+      });
+      const streamB = projTo.stream({
+        point(x, y) { this._bx = x; this._by = y; },
+        lineStart() {},
+        lineEnd() {},
+        polygonStart() {},
+        polygonEnd() {},
+      });
+
+      // We need both streams to process the same geo coordinates,
+      // so we create a pass-through that feeds both and lerps the output.
+      return {
+        point(lon, lat) {
+          const a = projFrom([lon, lat]);
+          const b = projTo([lon, lat]);
+          if (a && b) {
+            output.point(
+              a[0] * (1 - t) + b[0] * t,
+              a[1] * (1 - t) + b[1] * t
+            );
+          } else if (a) {
+            output.point(a[0], a[1]);
+          } else if (b) {
+            output.point(b[0], b[1]);
+          }
+        },
+        lineStart() { output.lineStart(); },
+        lineEnd() { output.lineEnd(); },
+        polygonStart() { output.polygonStart(); },
+        polygonEnd() { output.polygonEnd(); },
+        sphere() { output.sphere(); },
+      };
+    };
+
+    return project;
   }
 
   function render() {
@@ -264,12 +306,13 @@ async function init() {
     const projRed = fitProjection(PROJECTIONS[splitRed].fn, w, h);
     const pathRed = d3.geoPath(projRed, ctx);
 
-    // For the blue layer: when blendT=0, use red's projection (unified).
-    // When blendT=1, use the actual blue projection (split).
-    // For intermediate values, we need to render with one of the two projections
-    // and lerp the color opacity for a smooth visual transition.
     const projBlueSplit = fitProjection(PROJECTIONS[splitBlue].fn, w, h);
-    const pathBlueSplit = d3.geoPath(projBlueSplit, ctx);
+
+    // Blended blue projection: lerps every point from red's shape to blue's shape
+    const projBlue = blendT < 0.01 ? projRed
+      : blendT > 0.99 ? projBlueSplit
+      : lerpProjection(projRed, projBlueSplit, blendT);
+    const pathBlue = d3.geoPath(projBlue, ctx);
 
     // Clear
     ctx.globalCompositeOperation = "source-over";
@@ -282,36 +325,15 @@ async function init() {
     // Multiply blend
     ctx.globalCompositeOperation = "multiply";
 
-    if (blendT < 0.01) {
-      // Fully unified — blue uses red's projection
-      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
-    } else if (blendT > 0.99) {
-      // Fully split — blue uses its own projection
-      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
-    } else {
-      // Crossfade: fade out unified blue, fade in split blue
-      ctx.globalAlpha = 1 - blendT;
-      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
-      ctx.globalAlpha = blendT;
-      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
-      ctx.globalAlpha = 1.0;
-    }
+    // Blue projection — morphs from red's shape to its own
+    renderProjection(ctx, pathBlue, worldData.land, graticule, currentTheme.projB);
 
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
 
-    // Flight paths and markers — use blended projection for blue channel
-    const projBlueBlend = (coords) => {
-      const a = projRed(coords);
-      const b = projBlueSplit(coords);
-      if (!a || !b) return a || b;
-      return [
-        a[0] * (1 - blendT) + b[0] * blendT,
-        a[1] * (1 - blendT) + b[1] * blendT,
-      ];
-    };
-    renderFlightPaths(ctx, projRed, projBlueBlend);
-    renderMarkers(ctx, projRed, projBlueBlend);
+    // Flight paths and markers use the blended blue projection
+    renderFlightPaths(ctx, projRed, projBlue);
+    renderMarkers(ctx, projRed, projBlue);
   }
 
   render();
