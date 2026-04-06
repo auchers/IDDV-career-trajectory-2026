@@ -115,8 +115,8 @@ const LABEL_OFFSETS = [
   { dx: -14, dy: 18, align: "right" },   // LA — below-left
   { dx: -14, dy: -18, align: "right" },  // Berkeley — above-left
   { dx: 14, dy: -14, align: "left" },    // Tel Aviv — above-right
-  { dx: 14, dy: 18, align: "left" },     // Brooklyn — below-right
-  { dx: 14, dy: -18, align: "left" },    // Boston — above-right
+  { dx: 16, dy: 22, align: "left" },     // Brooklyn — below-right (pushed down)
+  { dx: -16, dy: -22, align: "right" },  // Boston — above-left (opposite side)
 ];
 
 const CITY_FONT = "bold 13px 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
