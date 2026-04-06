@@ -3,6 +3,10 @@
 const WORLD_DATA_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 const THEMES = {
+  orchidMint: {
+    projA: '#C07090',
+    projB: '#72BC98',
+  },
   roseSage: {
     projA: '#D4878F',
     projB: '#8BAF9E',
@@ -13,7 +17,7 @@ const THEMES = {
   },
 };
 
-let currentTheme = THEMES.roseSage;
+let currentTheme = THEMES.orchidMint;
 
 const CITIES = [
   { name: "Los Angeles", lat: 34.05, lon: -118.24 },
