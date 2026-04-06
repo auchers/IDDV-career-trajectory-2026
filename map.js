@@ -106,105 +106,45 @@ function renderFlightPaths(ctx, projRed, projBlue) {
   ctx.restore();
 }
 
-function formatCoord(lat, lon) {
-  const latDir = lat >= 0 ? "N" : "S";
-  const lonDir = lon >= 0 ? "E" : "W";
-  return `${Math.abs(lat).toFixed(2)}\u00B0${latDir}, ${Math.abs(lon).toFixed(2)}\u00B0${lonDir}`;
-}
-
 // Label offsets [dx, dy] from center of circle, and text alignment
 const LABEL_OFFSETS = [
-  { dx: -16, dy: 20, align: "right" },   // LA — below-left
-  { dx: -16, dy: -44, align: "right" },   // Berkeley — above-left
-  { dx: 16, dy: -16, align: "left" },     // Tel Aviv — above-right
-  { dx: 16, dy: 20, align: "left" },      // Brooklyn — below-right
-  { dx: 16, dy: -44, align: "left" },     // Boston — above-right
+  { dx: -14, dy: 18, align: "right" },   // LA — below-left
+  { dx: -14, dy: -18, align: "right" },  // Berkeley — above-left
+  { dx: 14, dy: -14, align: "left" },    // Tel Aviv — above-right
+  { dx: 14, dy: 18, align: "left" },     // Brooklyn — below-right
+  { dx: 14, dy: -18, align: "left" },    // Boston — above-right
 ];
 
-// Pixel nudges to separate overlapping dot pairs (applied to projected coords)
-// Tune these once a final projection is chosen
-const DOT_NUDGES = [
-  { nx: 0, ny: 0 },   // LA
-  { nx: 0, ny: 0 },   // Berkeley
-  { nx: 0, ny: 0 },   // Tel Aviv
-  { nx: 0, ny: 0 },   // Brooklyn
-  { nx: 0, ny: 0 },   // Boston
-];
-
-const CITY_FONT = "bold 13px 'Helvetica Neue', Arial, sans-serif";
-const COORD_FONT = "10px 'Courier New', 'Courier', monospace";
-
-function measureLabel(ctx, city, coordStr) {
-  ctx.font = CITY_FONT;
-  const nameW = ctx.measureText(city.name).width;
-  ctx.font = COORD_FONT;
-  const coordW = ctx.measureText(coordStr).width;
-  return { width: Math.max(nameW, coordW), nameH: 15, coordH: 13 };
-}
+const CITY_FONT = "bold 13px 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
 
 function renderMarkers(ctx, projRed, projBlue) {
   const radius = 9;
-  const pad = 5;
 
   CITIES.forEach((city, i) => {
-    // Alternate: even cities use red projection, odd use blue
     const projection = i % 2 === 0 ? projRed : projBlue;
     const projected = projection([city.lon, city.lat]);
     if (!projected) return;
-    const [px, py] = projected;
-    const { nx, ny } = DOT_NUDGES[i];
-    const x = px + nx;
-    const y = py + ny;
+    const [x, y] = projected;
     const { dx, dy, align } = LABEL_OFFSETS[i];
-    const coordStr = formatCoord(city.lat, city.lon);
-    const m = measureLabel(ctx, city, coordStr);
-    const totalH = m.nameH + m.coordH;
 
-    // Label anchor point
+    // City name with white stroke for legibility
     const labelX = x + dx;
     const labelY = y + dy;
-
-    // Compute backing rect position
-    const rectX = align === "left" ? labelX - pad : labelX - m.width - pad;
-    const rectY = labelY - pad;
-    const rectW = m.width + pad * 2;
-    const rectH = totalH + pad * 2;
-
-    // Draw connector line from dot to label
-    ctx.save();
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(labelX, labelY + totalH / 2);
-    ctx.stroke();
-    ctx.restore();
-
-    // White backing panel with black border
-    ctx.save();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(rectX, rectY, rectW, rectH, 3);
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-
-    // City name
     ctx.font = CITY_FONT;
     ctx.textAlign = align;
-    ctx.textBaseline = "top";
+    ctx.textBaseline = "middle";
+
+    // White outline stroke
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
+    ctx.strokeText(city.name, labelX, labelY);
+
+    // Black fill
     ctx.fillStyle = "#000";
     ctx.fillText(city.name, labelX, labelY);
 
-    // Lat/lon coordinates
-    ctx.font = COORD_FONT;
-    ctx.fillStyle = "#000";
-    ctx.fillText(coordStr, labelX, labelY + m.nameH);
-
-    // White halo ring (Warhol style)
+    // White halo ring
     ctx.beginPath();
     ctx.arc(x, y, radius + 2, 0, 2 * Math.PI);
     ctx.fillStyle = "#fff";
@@ -218,7 +158,7 @@ function renderMarkers(ctx, projRed, projBlue) {
 
     // White number centered in circle
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 11px 'Helvetica Neue', Arial, sans-serif";
+    ctx.font = "bold 11px 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(i + 1), x, y);
