@@ -243,7 +243,7 @@ function fitProjection(projectionFn, width, height) {
   return projection;
 }
 
-function renderProjection(ctx, path, land, graticule, outline, color) {
+function renderProjection(ctx, path, land, graticule, color) {
   // Land
   ctx.beginPath();
   path(land);
@@ -258,13 +258,6 @@ function renderProjection(ctx, path, land, graticule, outline, color) {
   ctx.globalAlpha = 0.3;
   ctx.stroke();
   ctx.globalAlpha = 1.0;
-
-  // Outline (sphere border)
-  ctx.beginPath();
-  path(outline);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
 }
 
 async function init() {
@@ -284,7 +277,6 @@ async function init() {
 
   const worldData = await loadWorldData();
   const graticule = d3.geoGraticule().precision(2.5)();
-  const outline = { type: "Sphere" };
 
   function render() {
     const w = width;
@@ -302,13 +294,13 @@ async function init() {
     ctx.fillRect(0, 0, w, h);
 
     // Red projection
-    renderProjection(ctx, pathRed, worldData.land, graticule, outline, currentTheme.projA);
+    renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projA);
 
     // Multiply blend
     ctx.globalCompositeOperation = "multiply";
 
     // Blue projection
-    renderProjection(ctx, pathBlue, worldData.land, graticule, outline, currentTheme.projB);
+    renderProjection(ctx, pathBlue, worldData.land, graticule, currentTheme.projB);
 
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
