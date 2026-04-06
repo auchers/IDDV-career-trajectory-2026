@@ -197,9 +197,36 @@ body {
 }
 
 .side-panel-section {
-  border-top: 1px solid #eee;
+  border-top: 1px solid #ddd;
   padding-top: 16px;
   margin-bottom: 16px;
+}
+
+.split-toggle-btn {
+  width: 100%;
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #f0ede8;
+  color: #444;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.split-toggle-btn:hover {
+  background: #e5e2dc;
+  border-color: #999;
+}
+
+.split-hint {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 9px;
+  color: #aaa;
+  text-align: center;
+  margin-top: 4px;
 }
 
 .talking-points {
@@ -263,7 +290,7 @@ body {
   width: 100%;
   max-width: 1600px;
   position: relative;
-  padding: 12px 40px 36px;
+  padding: 4px 40px 44px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -281,7 +308,7 @@ body {
   bottom: 0;
   transform: translateX(-50%);
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 400;
   color: #888;
   letter-spacing: 0;
@@ -319,11 +346,11 @@ body {
   width: 48px;
   text-align: right;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #999;
+  color: #777;
 }
 
 .timeline-bar {
@@ -410,18 +437,19 @@ body {
 
 .city-marker {
   position: absolute;
-  bottom: -20px;
+  bottom: -22px;
   left: 50%;
   transform: translateX(-50%);
-  width: 16px;
-  height: 16px;
-  background: #444;
-  border-radius: 50%;
+  height: auto;
+  background: none;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
-  font-size: 8px;
+  color: #999;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
   font-weight: 700;
 }
