@@ -233,67 +233,129 @@ async function init() {
   const worldData = await loadWorldData();
   const graticule = d3.geoGraticule().precision(2.5)();
 
+  // Animation state for unified ↔ split transition
+  let blendT = 0; // 0 = unified (both same), 1 = fully split
+  let unified = true;
+  let splitRed = config.red;
+  let splitBlue = config.blue;
+  let animationId = null;
+
+  // Create a blended projection that lerps between two projections
+  function blendedProjection(projA, projB, t) {
+    const blend = (coords) => {
+      const a = projA(coords);
+      const b = projB(coords);
+      if (!a || !b) return a || b;
+      return [
+        a[0] * (1 - t) + b[0] * t,
+        a[1] * (1 - t) + b[1] * t,
+      ];
+    };
+    // d3.geoPath needs a .stream() method — wrap via d3.geoProjection
+    // But for canvas rendering, we need a proper projection with stream.
+    // Simpler: use projA for the path (land/graticule), and blend for markers/flights.
+    return blend;
+  }
+
   function render() {
     const w = width;
     const h = height;
 
-    const projRed = fitProjection(PROJECTIONS[config.red].fn, w, h);
+    const projRed = fitProjection(PROJECTIONS[splitRed].fn, w, h);
     const pathRed = d3.geoPath(projRed, ctx);
 
-    const projBlue = fitProjection(PROJECTIONS[config.blue].fn, w, h);
-    const pathBlue = d3.geoPath(projBlue, ctx);
+    // For the blue layer: when blendT=0, use red's projection (unified).
+    // When blendT=1, use the actual blue projection (split).
+    // For intermediate values, we need to render with one of the two projections
+    // and lerp the color opacity for a smooth visual transition.
+    const projBlueSplit = fitProjection(PROJECTIONS[splitBlue].fn, w, h);
+    const pathBlueSplit = d3.geoPath(projBlueSplit, ctx);
 
     // Clear
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, w, h);
 
-    // Red projection
+    // Red projection (always the same)
     renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projA);
 
     // Multiply blend
     ctx.globalCompositeOperation = "multiply";
 
-    // Blue projection
-    renderProjection(ctx, pathBlue, worldData.land, graticule, currentTheme.projB);
+    if (blendT < 0.01) {
+      // Fully unified — blue uses red's projection
+      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
+    } else if (blendT > 0.99) {
+      // Fully split — blue uses its own projection
+      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
+    } else {
+      // Crossfade: fade out unified blue, fade in split blue
+      ctx.globalAlpha = 1 - blendT;
+      renderProjection(ctx, pathRed, worldData.land, graticule, currentTheme.projB);
+      ctx.globalAlpha = blendT;
+      renderProjection(ctx, pathBlueSplit, worldData.land, graticule, currentTheme.projB);
+      ctx.globalAlpha = 1.0;
+    }
 
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
 
-    // Flight paths and markers (alternate between projections)
-    renderFlightPaths(ctx, projRed, projBlue);
-    renderMarkers(ctx, projRed, projBlue);
+    // Flight paths and markers — use blended projection for blue channel
+    const projBlueBlend = (coords) => {
+      const a = projRed(coords);
+      const b = projBlueSplit(coords);
+      if (!a || !b) return a || b;
+      return [
+        a[0] * (1 - blendT) + b[0] * blendT,
+        a[1] * (1 - blendT) + b[1] * blendT,
+      ];
+    };
+    renderFlightPaths(ctx, projRed, projBlueBlend);
+    renderMarkers(ctx, projRed, projBlueBlend);
   }
 
   render();
 
-  // Expose render + config for controls (Task 5)
+  // Expose render + config for controls
   window._map = { render, config, width, height, worldData, ctx };
 
-  // Spacebar toggle: unified (both projections identical) ↔ split (actual pair)
-  let unified = true;
-  const splitRed = config.red;
-  const splitBlue = config.blue;
-  // Start unified: both projections use red's value
-  config.blue = config.red;
-  render();
+  function animateTo(targetT) {
+    if (animationId) cancelAnimationFrame(animationId);
+    const startT = blendT;
+    const startTime = performance.now();
+    const duration = 800; // ms
+
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease in-out cubic
+      const ease = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      blendT = startT + (targetT - startT) * ease;
+      render();
+      if (progress < 1) {
+        animationId = requestAnimationFrame(tick);
+      } else {
+        animationId = null;
+        blendT = targetT;
+        // Update config to reflect final state (for dropdown sync)
+        config.red = splitRed;
+        config.blue = targetT > 0.5 ? splitBlue : splitRed;
+        const rs = document.getElementById("red-select");
+        const bs = document.getElementById("blue-select");
+        if (rs) rs.value = config.red;
+        if (bs) bs.value = config.blue;
+      }
+    }
+    animationId = requestAnimationFrame(tick);
+  }
 
   window.addEventListener("keydown", (e) => {
     if (e.code !== "Space" || e.target.tagName === "SELECT") return;
     e.preventDefault();
     unified = !unified;
-    if (unified) {
-      config.blue = config.red;
-    } else {
-      config.red = splitRed;
-      config.blue = splitBlue;
-    }
-    render();
-    // Sync dropdowns if controls are visible
-    const redSelect = document.getElementById("red-select");
-    const blueSelect = document.getElementById("blue-select");
-    if (redSelect) redSelect.value = config.red;
-    if (blueSelect) blueSelect.value = config.blue;
+    animateTo(unified ? 0 : 1);
   });
 
   // Side panel toggle
@@ -320,9 +382,12 @@ async function init() {
   blueSelect.value = config.blue;
 
   const onProjectionChange = () => {
-    config.red = redSelect.value;
-    config.blue = blueSelect.value;
+    splitRed = redSelect.value;
+    splitBlue = blueSelect.value;
+    config.red = splitRed;
+    config.blue = splitBlue;
     unified = false;
+    blendT = 1;
     render();
     updateActivePreset();
   };
@@ -343,11 +408,14 @@ async function init() {
     const btn = document.createElement("button");
     btn.textContent = preset.name;
     btn.addEventListener("click", () => {
-      config.red = preset.red;
-      config.blue = preset.blue;
-      redSelect.value = config.red;
-      blueSelect.value = config.blue;
+      splitRed = preset.red;
+      splitBlue = preset.blue;
+      config.red = splitRed;
+      config.blue = splitBlue;
+      redSelect.value = splitRed;
+      blueSelect.value = splitBlue;
       unified = false;
+      blendT = 1;
       render();
       updateActivePreset();
     });
