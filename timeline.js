@@ -112,7 +112,7 @@ function renderCityLines() {
     const marker = document.createElement('div');
     marker.className = 'city-marker';
     const prev = arrival.number - 1;
-    marker.textContent = `${prev}\u2009\u203A\u2009${arrival.number}`;
+    marker.innerHTML = `<span class="cm-num">${prev}</span><span class="cm-arrow">\u203A</span><span class="cm-num">${arrival.number}</span>`;
     line.appendChild(marker);
 
     container.appendChild(line);
