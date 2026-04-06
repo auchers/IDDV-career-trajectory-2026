@@ -176,12 +176,12 @@ async function loadWorldData() {
 
 function fitProjection(projectionFn, width, height) {
   const projection = projectionFn();
-  // Fit to a taller virtual canvas so the projection is larger than the visible area.
-  // The bottom (southern hemisphere spikes) will extend below the wrapper and get clipped.
+  // Fit to a taller virtual canvas and shift upward so the southern hemisphere
+  // spikes extend below the visible wrapper and get clipped by overflow:hidden.
   const overflowY = height * 0.35;
   const pad = 16;
   projection.fitExtent(
-    [[pad, pad], [width - pad, height + overflowY - pad]],
+    [[pad, pad - overflowY], [width - pad, height - pad]],
     { type: "Sphere" }
   );
   return projection;
