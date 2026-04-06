@@ -236,7 +236,10 @@ async function loadWorldData() {
 
 function fitProjection(projectionFn, width, height) {
   const projection = projectionFn();
-  projection.fitSize([width, height], { type: "Sphere" });
+  // fitSize scales uniformly (no stretching) and centers within [width, height].
+  // Add padding so the projection doesn't touch the canvas edges.
+  const pad = 16;
+  projection.fitExtent([[pad, pad], [width - pad, height - pad]], { type: "Sphere" });
   return projection;
 }
 
