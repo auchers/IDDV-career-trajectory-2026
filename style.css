@@ -130,12 +130,19 @@ body {
 
 /* ── Map ─────────────────────────────────────── */
 
-#map-canvas {
-  display: block;
-  width: 100%;
-  max-width: 1600px;
+#map-wrap {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: 1600px;
+  position: relative;
+}
+
+#map-canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* ── Print ────────────────────────────────────── */
@@ -145,7 +152,7 @@ body {
     display: none !important;
   }
 
-  #map-canvas {
+  #map-wrap {
     width: 100%;
     max-width: none;
   }

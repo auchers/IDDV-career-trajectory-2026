@@ -201,19 +201,26 @@ function renderProjection(ctx, path, land, graticule, color) {
 }
 
 async function init() {
+  const wrap = document.getElementById("map-wrap");
   const canvas = document.getElementById("map-canvas");
   const ctx = canvas.getContext("2d");
   const config = parseParams();
 
-  // Set canvas resolution to match display size
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
+  // Size canvas to match wrapper (wrapper is flex-sized, canvas is absolute-positioned)
+  function syncCanvasSize() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    return { w, h };
+  }
 
-  let width = rect.width;
-  let height = rect.height;
+  let { w: width, h: height } = syncCanvasSize();
 
   const worldData = await loadWorldData();
   const graticule = d3.geoGraticule().precision(2.5)();
@@ -317,14 +324,9 @@ async function init() {
 
   // Resize handler
   window.addEventListener("resize", () => {
-    const r = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = r.width * dpr;
-    canvas.height = r.height * dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-    width = r.width;
-    height = r.height;
+    const size = syncCanvasSize();
+    width = size.w;
+    height = size.h;
     render();
   });
 }
