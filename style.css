@@ -10,7 +10,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ── Header ──────────────────────────────────── */
@@ -19,6 +20,7 @@ body {
   width: 100vw;
   max-width: 1600px;
   padding: 20px 40px 12px;
+  flex-shrink: 0;
 }
 
 #card-header h1 {
@@ -130,9 +132,10 @@ body {
 
 #map-canvas {
   display: block;
-  width: 100vw;
+  width: 100%;
   max-width: 1600px;
-  aspect-ratio: 16 / 9;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ── Print ────────────────────────────────────── */
@@ -161,6 +164,7 @@ body {
   position: relative;
   padding: 16px 40px 32px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .timeline-axis {
