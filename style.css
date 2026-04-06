@@ -465,7 +465,8 @@ body {
 }
 
 .cm-arrow {
-  color: #aaa;
-  font-size: 10px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 1;
 }
