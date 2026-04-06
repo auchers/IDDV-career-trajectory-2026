@@ -91,8 +91,8 @@ const DOT_NUDGES = [
   { nx: 0, ny: 0 },    // LA
   { nx: 0, ny: 0 },    // Berkeley
   { nx: 0, ny: 0 },    // Tel Aviv
-  { nx: -10, ny: 10 }, // Brooklyn — nudge down-left
-  { nx: 10, ny: -10 }, // Boston — nudge up-right
+  { nx: -5, ny: 5 },  // Brooklyn — slight nudge down-left
+  { nx: 5, ny: -5 },  // Boston — slight nudge up-right
 ];
 
 const LABEL_OFFSETS = [
