@@ -63,7 +63,6 @@ function renderTracks() {
 
     const trackEvents = EVENTS.filter(e => e.track === trackName);
 
-    let barCount = 0;
     trackEvents.forEach(event => {
       if (event.end !== undefined) {
         const endYear = event.end === null ? TIMELINE_END : event.end;
@@ -73,8 +72,6 @@ function renderTracks() {
         const bar = document.createElement('div');
         bar.className = 'timeline-bar';
         if (event.end === null) bar.classList.add('ongoing');
-        if (barCount % 2 === 1) bar.classList.add('label-below');
-        barCount++;
         bar.style.left = `${leftPct}%`;
         bar.style.width = `${widthPct}%`;
 
