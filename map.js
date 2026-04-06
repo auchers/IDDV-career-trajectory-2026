@@ -2,6 +2,19 @@
 
 const WORLD_DATA_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
+const THEMES = {
+  roseSage: {
+    projA: '#D4878F',
+    projB: '#8BAF9E',
+  },
+  classic: {
+    projA: '#f00',
+    projB: '#00f',
+  },
+};
+
+let currentTheme = THEMES.roseSage;
+
 const CITIES = [
   { name: "Los Angeles", lat: 34.05, lon: -118.24 },
   { name: "Berkeley", lat: 37.87, lon: -122.27 },
@@ -286,13 +299,13 @@ async function init() {
     ctx.fillRect(0, 0, w, h);
 
     // Red projection
-    renderProjection(ctx, pathRed, worldData.land, graticule, outline, "#f00");
+    renderProjection(ctx, pathRed, worldData.land, graticule, outline, currentTheme.projA);
 
     // Multiply blend
     ctx.globalCompositeOperation = "multiply";
 
     // Blue projection
-    renderProjection(ctx, pathBlue, worldData.land, graticule, outline, "#00f");
+    renderProjection(ctx, pathBlue, worldData.land, graticule, outline, currentTheme.projB);
 
     // Reset composite
     ctx.globalCompositeOperation = "source-over";
@@ -362,6 +375,9 @@ async function init() {
 
     // Set initial active state
     updateActivePreset();
+
+    document.querySelector('.projection-label.red').style.color = currentTheme.projA;
+    document.querySelector('.projection-label.blue').style.color = currentTheme.projB;
   }
 
   // Resize handler
